@@ -10,8 +10,8 @@ import (
 	"github.com/cuu/gogame/color"
 	"github.com/cuu/gogame/font"
 	"github.com/cuu/gogame/display"
-	//"github.com/cuu/gogame/transform"
-	"github.com/cuu/gogame/draw"
+	"github.com/cuu/gogame/transform"
+	//"github.com/cuu/gogame/draw"
 	//"github.com/cuu/gogame/event"
 
 
@@ -120,6 +120,7 @@ func NewPico8() *Pico8 {
 	
 	p.Font = font.Font("PICO-8.ttf",4)
 	
+	p.PenColor = 1
 	
 	return p
 	
@@ -140,27 +141,18 @@ func (self *Pico8) Flip() {
 	if self.HWND != nil {
 		fmt.Println("pico8 flip now")
 		blit_rect := rect.NewRect(self.CameraDx,self.CameraDy)
-		/*
+		
 		window_surface := display.GetSurface()
 		window_w := surface.GetWidth(window_surface)
 		window_h := surface.GetHeight(window_surface)
-		*/
+		
 		surface.Fill(self.DisplayCanvas,color.NewColor(3,5,10,255))
 		
 		self.DisplayCanvas.SetPalette(self.DisplayPalette)
-		
-		
-		 screen := display.GetSurface()
-	      draw.Line(screen,color.NewColor(255,44,255,255), 0,100, 320,100,3)
-	      draw.Line(screen,color.NewColor(255,44,255,255), 10, 0, 10,250,4)
-
-	      rect2 := rect.Rect(3,120,200,30)
-	      draw.AARoundRect(screen,&rect2,&color.Color{0,213,222,255},10,0, &color.Color{0,213,222,255})
-      
-		
+				
 		surface.Blit(self.DisplayCanvas,self.DrawCanvas,blit_rect,nil)
 		
-		/*
+		
 		if window_w > self.Width && window_h > self.Height {
 		
 			bigger_border := window_w
@@ -176,10 +168,10 @@ func (self *Pico8) Flip() {
 			_r := rect.NewRect(_blit_x,_blit_y)
 			surface.Blit(self.HWND,bigger,_r,nil)
 			
-		} else {*/
+		} else {
 			_r := rect.NewRect()
 			surface.Blit(self.HWND,self.DisplayCanvas,_r,nil)
-		//}		
+		}		
 		
 		surface.Fill(self.DisplayCanvas,color.NewColor(0,0,0,255))
 		
@@ -224,7 +216,7 @@ func (self *Pico8) Print(args []CmdArg){
 	text := ""
 	x:=self.Cursor[0]
 	y:=self.Cursor[1]
-	c:=0
+	c:=1
 	
 	if len(args) == 0 || len(args) == 2 {
 		return
@@ -253,7 +245,6 @@ func (self *Pico8) Print(args []CmdArg){
 	}
 	
 	fmt.Println(text,x,y,c)
-	c = 2
 	self.Color(c)
 	
 	imgText := font.Render(self.Font,text,false,color.NewColorSDL(self.draw_colors[self.DrawPaletteIdx[self.PenColor]]),nil)
