@@ -60,6 +60,8 @@ type Pico8 struct{
 	SpriteFlags [256]int
 	
 	Uptime int
+
+	Resource map[string]string
 	
 }
 
@@ -122,6 +124,7 @@ func NewPico8() *Pico8 {
 	
 	p.PenColor = 1
 	
+	p.Resource = make(map[string]string)
 	return p
 	
 }
@@ -135,6 +138,12 @@ func (self *Pico8) SyncDrawPal() {
 	
 	self.DrawPalette.SetColors(self.draw_colors)
 
+}
+
+
+func (self *Pico8) SetGff() {
+
+  
 }
 
 func (self *Pico8) Flip() {
@@ -244,7 +253,7 @@ func (self *Pico8) Print(args []CmdArg){
 		self.Cursor = [2]int{x,y}
 	}
 	
-	fmt.Println(text,x,y,c)
+	//fmt.Println(text,x,y,c)
 	self.Color(c)
 	
 	imgText := font.Render(self.Font,text,false,color.NewColorSDL(self.draw_colors[self.DrawPaletteIdx[self.PenColor]]),nil)

@@ -429,12 +429,10 @@ function api.load_p8_text(filename)
   server.send_pico8_version(version)
 
   server.send_resource("gfx",gfxdata)
-  server.send_resource("gff",gffdata:sub(1,#gffdata-1))
-  server.send_resource("sfx",sfxdata)
-  server.send_resource("map",mapdata)
-  server.send_resource("music",musicdata)
-
-  server.send_resource_done()
+  --server.send_resource("gff",gffdata:sub(1,#gffdata-1))
+  --server.send_resource("sfx",sfxdata)
+  --server.send_resource("map",mapdata)
+  --server.send_resource("music",musicdata)
 
 end
 

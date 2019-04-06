@@ -5,17 +5,15 @@ import(
     "encoding/json"
     "strconv"
     gotime "time"
-//	  "github.com/veandco/go-sdl2/sdl"
+//   "github.com/veandco/go-sdl2/sdl"
 
 
-  	//"github.com/cuu/gogame"
+     //"github.com/cuu/gogame"
     
+    "github.com/cuu/gogame/color"
+    "github.com/cuu/gogame/event"
 
-    
-  	"github.com/cuu/gogame/color"
-  	"github.com/cuu/gogame/event"
-
-  	"github.com/cuu/gogame/time"
+    "github.com/cuu/gogame/time"
     "github.com/cuu/gogame/display"
     "github.com/cuu/gogame/font"
     "github.com/cuu/gogame/draw"
@@ -90,35 +88,33 @@ func (self*GoGameThread) QuitWindow(){
 
 func (self*GoGameThread) EventLoop() {
   
-	for self.Inited {
-		ev := event.Poll()
-		if ev.Type == event.QUIT {
-			break
-		}
+  for self.Inited {
+    ev := event.Poll()
+    if ev.Type == event.QUIT {
+      break
+    }
     
-		if ev.Type == event.USEREVENT {
-			
-			fmt.Println(ev.Data["Msg"])
-		}
-		if ev.Type == event.KEYDOWN {
+    if ev.Type == event.USEREVENT {
+      fmt.Println(ev.Data["Msg"])
+    }
+    if ev.Type == event.KEYDOWN {
       if ev.Data["Key"] == "Q" {
         break
-			}
-      if ev.Data["Key"] == "P" {
-        screen := display.GetSurface() 
-	      draw.Line(screen,color.NewColor(255,44,255,255), 0,100, 320,100,3)
-	      draw.Line(screen,color.NewColor(255,44,255,255), 10, 0, 10,250,4)
-
-	      rect2 := rect.Rect(3,120,200,30)
-	      draw.AARoundRect(screen,&rect2,&color.Color{0,213,222,255},10,0, &color.Color{0,213,222,255})
-        display.Flip()
-        
       }
-		}
+      if ev.Data["Key"] == "P" {
+	screen := display.GetSurface() 
+	draw.Line(screen,color.NewColor(255,44,255,255), 0,100, 320,100,3)
+	draw.Line(screen,color.NewColor(255,44,255,255), 10, 0, 10,250,4)
+
+	rect2 := rect.Rect(3,120,200,30)
+	draw.AARoundRect(screen,&rect2,&color.Color{0,213,222,255},10,0, &color.Color{0,213,222,255})
+	display.Flip()
+      }
+    }
     
     time.NewClock().Tick(30)
     
-	}
+  }
 }
 
 func (self *GoGameThread) Flip() {
@@ -152,27 +148,43 @@ func (self *GoGameThread) Run() int {
 
 type CmdArg struct {
   Type string `json:"Type"`
-  Value string `json:"Value"`
+  Value interface{} `json:"Value"`
 }
 
-func (self *CmdArg) GetInt() int{
-  if self.Type == "I" {
-    val,err := strconv.Atoi(self.Value)
-    if err == nil {
-      return val
-    }else {
-      fmt.Println(err)
-    }
-  }else {
-    fmt.Println("try to get int from not-integer Arg")
-  }
+func (self *CmdArg) GetInt() int {
   
+  switch v := self.Value.(type) {
+  case int:
+    return self.Value.(int)
+  case float64:
+    tmp := self.Value.(float64)
+    return int(tmp)
+  case string:
+    fmt.Printf("String: %v", v)
+    tmp,err := strconv.Atoi(self.Value.(string))
+    if err != nil {
+      fmt.Println(err)
+    }else {
+      return int(tmp)
+    }
+  case bool:
+    if self.Value.(bool) == true {
+      return 1
+    }else {
+      return 0
+    }
+  default:
+    panic("Value type error")
+  }
   return -1
 }
 
-func (self *CmdArg) GetStr() string {  
-  return self.Value
+func (self *CmdArg) GetStr() string {
+  return self.Value.(string)
+}
 
+func (self *CmdArg) GetBool() bool {
+  return self.Value.(bool)
 }
 
 type ACmd struct {
@@ -180,15 +192,19 @@ type ACmd struct {
   Args []CmdArg `json:"Args"`
 }
 
-func (self *GoGameThread) ProcessCmd(cmd string) {
+func (self *GoGameThread) ProcessCmd(cmd string) string {
   
   acmd := &ACmd{}
-   
+
   if err := json.Unmarshal([]byte(cmd), &acmd); err != nil {
-    fmt.Println(err)
-    return
+    panic(fmt.Sprintln(err,cmd))
+    return "Error"
   }
   
+  if acmd.Func == "res" {
+    fmt.Println(cmd)
+  }
+
   if acmd.Func == "print" {
     self.ThePico8.Print(acmd.Args)
   }
@@ -196,7 +212,8 @@ func (self *GoGameThread) ProcessCmd(cmd string) {
   if acmd.Func == "flip" {
     self.Flip()
   }
-
+  
+  return "OK"
 }
 
 

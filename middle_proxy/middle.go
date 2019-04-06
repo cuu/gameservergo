@@ -33,7 +33,7 @@ func (c *Client) listen( id int) {
 	reader := bufio.NewReader(c.conn)
 	
 	for {
-		_, err := reader.Read(message)
+		read_number, err := reader.Read(message)
 		if err != nil {
 			if err != io.EOF {
 				fmt.Println("Un EOF error: ",err)
@@ -41,7 +41,7 @@ func (c *Client) listen( id int) {
 			c.conn.Close()
 			return
 		}
-		Exchange(id,message)
+		Exchange(id,message[:read_number])
 		for i:=0;i<1024;i++ {
 			message[i]=0
 		}
