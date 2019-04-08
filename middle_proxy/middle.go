@@ -24,6 +24,7 @@ var ResetPeer = 0
 
 type Client struct {
 	conn   net.Conn
+  Bind   int
 }
 
 func (c *Client) listen( id int) {
