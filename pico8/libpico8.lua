@@ -11,14 +11,14 @@ api.shr = bit.rshift
 
 local __keymap = {
   [0] = {
-    [0] = 'left',
-    [1] = 'right',
-    [2] = 'up',
-    [3] = 'down',
-    [4] = 'u',
-    [5] = 'i',
-    [6] = 'return',
-    [7] = 'escape',
+    [0] = 'Left',
+    [1] = 'Right',
+    [2] = 'Up',
+    [3] = 'Down',
+    [4] = 'U',
+    [5] = 'I',
+    [6] = 'Return',
+    [7] = 'Escape',
   }
 }
 
@@ -429,10 +429,10 @@ function api.load_p8_text(filename)
   server.send_pico8_version(version)
 
   server.send_resource("gfx",gfxdata)
-  --server.send_resource("gff",gffdata:sub(1,#gffdata-1))
-  --server.send_resource("sfx",sfxdata)
-  --server.send_resource("map",mapdata)
-  --server.send_resource("music",musicdata)
+  server.send_resource("gff",gffdata:sub(1,#gffdata-1))
+  server.send_resource("sfx",sfxdata)
+  server.send_resource("map",mapdata)
+  server.send_resource("music",musicdata)
 
 end
 
@@ -616,19 +616,19 @@ function api.rectfill(x0,y0,x1,y1,col)
   end
 end
 
-function api.circ(x0,y0,x1,y1,col)
+function api.circ(ox,oy,r,col)
   if col == nil then
-    server.circ(x0,y0,x1,y1)
+    server.circ(ox,oy,r)
   else
-    server.circ(x0,y0,x1,y1,col)
+    server.circ(ox,oy,r,col)
   end
 end
 
-function api.circfill(x0,y0,x1,y1,col)
+function api.circfill(cx,cy,r,col)
   if col == nil then
-    server.circfill(x0,y0,x1,y1)
+    server.circfill(cx,cy,r)
   else
-    server.circfill(x0,y0,x1,y1,col)
+    server.circfill(cx,cy,r,col)
   end
 end
 

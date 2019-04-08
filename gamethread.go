@@ -2,6 +2,7 @@ package main
 
 import(
     "fmt"
+    "sync"
     "encoding/json"
     "strconv"
     gotime "time"
@@ -16,8 +17,8 @@ import(
     "github.com/cuu/gogame/time"
     "github.com/cuu/gogame/display"
     "github.com/cuu/gogame/font"
-    "github.com/cuu/gogame/draw"
-    "github.com/cuu/gogame/rect"
+    //"github.com/cuu/gogame/draw"
+    //"github.com/cuu/gogame/rect"
 
 
 )
@@ -46,6 +47,8 @@ type GoGameThread struct {
   
   PrevTime gotime.Time
   CurrentTime gotime.Time
+
+  KeyLog sync.Map
 }
 
 func NewGoGameThread() *GoGameThread {
@@ -61,7 +64,18 @@ func NewGoGameThread() *GoGameThread {
   
   p.State = "draw"
   p.BgColor = color.NewColor(0,0,0,255)
-
+  
+  p.KeyLog = sync.Map{}
+  p.KeyLog.Store("Left",-1)
+  p.KeyLog.Store("Right",-1)
+  p.KeyLog.Store("Up",-1)
+  p.KeyLog.Store("Down",-1)
+  p.KeyLog.Store("U",-1)
+  p.KeyLog.Store("I",-1)
+  p.KeyLog.Store("Return",-1)
+  p.KeyLog.Store("Escape",-1)
+  
+  
   return p 
 }
 
@@ -98,21 +112,26 @@ func (self*GoGameThread) EventLoop() {
       fmt.Println(ev.Data["Msg"])
     }
     if ev.Type == event.KEYDOWN {
-      if ev.Data["Key"] == "Q" {
+      if ev.Data["Key"] == "Escape" {
         break
       }
-      if ev.Data["Key"] == "P" {
-	screen := display.GetSurface() 
-	draw.Line(screen,color.NewColor(255,44,255,255), 0,100, 320,100,3)
-	draw.Line(screen,color.NewColor(255,44,255,255), 10, 0, 10,250,4)
+      
 
-	rect2 := rect.Rect(3,120,200,30)
-	draw.AARoundRect(screen,&rect2,&color.Color{0,213,222,255},10,0, &color.Color{0,213,222,255})
-	display.Flip()
+      if val,ok := self.KeyLog.Load(ev.Data["Key"]); ok {
+	
+	self.KeyLog.Store(ev.Data["Key"],(val.(int)+1))
+
+      }else {
+	self.KeyLog.Store(ev.Data["Key"],1)
       }
+
+    }
+    if ev.Type == event.KEYUP {
+      self.KeyLog.Store(ev.Data["Key"],-1)
     }
     
-    time.NewClock().Tick(30)
+    //time.NewClock().Tick(30)
+    //time.BlockDelay(10)
     
   }
 }
@@ -135,6 +154,23 @@ func (self *GoGameThread) Flip() {
     self.Frames = 0
     self.PrevTime = self.CurrentTime
   }
+}
+
+func (self *GoGameThread) Btn(args []CmdArg) string {
+  if len(args) < 2 {
+    return "FALSE"
+  }
+  
+  keycode_string := args[0].GetStr()
+  //player_idx     := args[1].GetInt() // Not implemented yet
+  if val,ok := self.KeyLog.Load(keycode_string); ok {
+    if val.(int) >= 0 {
+      return "TRUE"
+    }
+  }
+  
+  return "FALSE"
+
 }
 
 func (self *GoGameThread) Run() int {
@@ -202,7 +238,7 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
   }
   
   if acmd.Func == "res" {
-    fmt.Println(cmd)
+    self.ThePico8.Res(acmd.Args)
   }
 
   if acmd.Func == "print" {
@@ -213,6 +249,46 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
     self.Flip()
   }
   
+  if acmd.Func == "pico8" {
+    self.ThePico8.SetVersion(acmd.Args)
+  }
+  if acmd.Func == "map" {
+    self.ThePico8.Map(acmd.Args)
+  }
+
+  if acmd.Func == "spr" {
+    self.ThePico8.Spr(acmd.Args)
+  }
+  if acmd.Func == "mget" {
+    return self.ThePico8.MGet(acmd.Args)
+  }
+
+  if acmd.Func == "rect" {
+    self.ThePico8.Rectfill(acmd.Args)
+  }
+
+  if acmd.Func == "rectfill" {
+    self.ThePico8.Rectfill(acmd.Args)
+  }
+
+  if acmd.Func == "btn" {
+    return self.Btn(acmd.Args)
+  }
+
+  if acmd.Func == "pal" {
+    self.ThePico8.Pal(acmd.Args)
+  }
+  
+  if acmd.Func == "palt" {
+    self.ThePico8.Palt(acmd.Args...)
+  }
+  
+  if acmd.Func == "circ" {
+    self.ThePico8.Circ(acmd.Args...)
+  }
+  if acmd.Func == "circfill" {
+    self.ThePico8.Circfill(acmd.Args...)
+  }
   return "OK"
 }
 

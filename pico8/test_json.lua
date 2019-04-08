@@ -28,4 +28,4 @@ function safe_format(funcname,...)
   return json.encode(ret)
 end
 
-print( safe_format("res.print","test",10,math.floor(20),true))
+print( safe_format("res.print","test",10,math.floor(20),true,1,2,3,"order","you"))

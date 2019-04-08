@@ -20,6 +20,8 @@ const (
 		MAX_CLIENTS = 2
 )
 
+var ResetPeer = 0
+
 type Client struct {
 	conn   net.Conn
 }
@@ -28,7 +30,9 @@ func (c *Client) listen( id int) {
 	if id < MAX_CLIENTS {
 		TheClients[id] = c
 	}
-
+  
+  ResetPeer+=1
+  
 	message := make([]byte, 1024)
 	reader := bufio.NewReader(c.conn)
 	
@@ -39,6 +43,14 @@ func (c *Client) listen( id int) {
 				fmt.Println("Un EOF error: ",err)
 			}
 			c.conn.Close()
+      if ResetPeer > 0 {
+        for i:=0;i<MAX_CLIENTS;i++ {
+          if TheClients[i] != nil {
+            TheClients[i].conn.Close()
+          }
+          ResetPeer-=1
+        }
+      }
 			return
 		}
 		Exchange(id,message[:read_number])
@@ -84,7 +96,7 @@ func serverA() {
 					conn:   conn,
 				}
 				
-				go client.listen(0)
+				client.listen(0)
 				
     }
 }
@@ -103,7 +115,7 @@ func serverB() {
 					conn:   conn,
 				}
 
-				go client.listen(1)
+				client.listen(1)
     }
 }
 
