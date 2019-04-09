@@ -136,23 +136,26 @@ func (self*GoGameThread) EventLoop() {
   }
 }
 
-func (self *GoGameThread) Flip() {
-  if self.Frames == 0 {
-    self.PrevTime = gotime.Now()
-  }  
+func (self *GoGameThread) FlipLoop() {
+  for {
+    if self.Frames == 0 {
+      self.PrevTime = gotime.Now()
+    }  
   
-  self.ThePico8.Flip()
+    //self.ThePico8.Flip()
   
-  display.Flip()
-  self.Frames+=1
+    display.Flip()
+    self.Frames+=1
   
-  self.CurrentTime = gotime.Now()
+    self.CurrentTime = gotime.Now()
   
-  if self.CurrentTime.Sub(self.PrevTime) > 10*gotime.Second {
-    fps := self.Frames /10
-    print("fps is: ",fps)
-    self.Frames = 0
-    self.PrevTime = self.CurrentTime
+    if self.CurrentTime.Sub(self.PrevTime) > 10*gotime.Second {
+      fps := self.Frames /10
+      print("fps is: ",fps)
+      self.Frames = 0
+      self.PrevTime = self.CurrentTime
+    }
+
   }
 }
 
@@ -176,8 +179,12 @@ func (self *GoGameThread) Btn(args []CmdArg) string {
 func (self *GoGameThread) Run() int {
 
   self.InitWindow()
+
+  go self.FlipLoop()
+
   self.EventLoop()  
-  
+
+
   return 0
   
 }
@@ -246,7 +253,7 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
   }
   
   if acmd.Func == "flip" {
-    self.Flip()
+    self.ThePico8.Flip()
   }
   
   if acmd.Func == "pico8" {
