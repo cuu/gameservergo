@@ -130,8 +130,7 @@ func (self*GoGameThread) EventLoop() {
       self.KeyLog.Store(ev.Data["Key"],-1)
     }
     
-    //time.NewClock().Tick(30)
-    //time.BlockDelay(10)
+    time.SDL_Delay(30)
     
   }
 }
@@ -155,6 +154,8 @@ func (self *GoGameThread) FlipLoop() {
       self.Frames = 0
       self.PrevTime = self.CurrentTime
     }
+    
+    time.NewClock().Tick(30)
 
   }
 }
