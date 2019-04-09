@@ -78,11 +78,12 @@ end
 function api.btn(i,p)
 	local thing
 	local ret
-
+	
 	if type(i) == 'number' then
 		p = p or 0
 		if __keymap[p] and __keymap[p][i] then
 				ret = server.btn( __keymap[p][i],p)
+--				ret = "FALSE"
 				if ret == "TRUE" then
 					return true
 				else 

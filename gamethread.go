@@ -142,7 +142,7 @@ func (self *GoGameThread) FlipLoop() {
     }  
   
     //self.ThePico8.Flip()
-  
+    display.UpdatePixels()
     display.Flip()
     self.Frames+=1
   
@@ -161,6 +161,7 @@ func (self *GoGameThread) FlipLoop() {
 }
 
 func (self *GoGameThread) Btn(args []CmdArg) string {
+
   if len(args) < 2 {
     return "FALSE"
   }
@@ -182,6 +183,8 @@ func (self *GoGameThread) Run() int {
   self.InitWindow()
 
   go self.FlipLoop()
+  
+  //go self.ThePico8.FlipLoop()
 
   self.EventLoop()  
 
@@ -249,12 +252,12 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
     self.ThePico8.Res(acmd.Args)
   }
 
-  if acmd.Func == "print" {
-    self.ThePico8.Print(acmd.Args)
-  }
-  
   if acmd.Func == "flip" {
     self.ThePico8.Flip()
+  }
+
+  if acmd.Func == "print" {
+    self.ThePico8.Print(acmd.Args)
   }
   
   if acmd.Func == "pico8" {
@@ -297,7 +300,8 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
   if acmd.Func == "circfill" {
     self.ThePico8.Circfill(acmd.Args...)
   }
-  return "OK"
+  
+  return "O"
 }
 
 

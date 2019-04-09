@@ -15,7 +15,7 @@ import (
 	"github.com/cuu/gogame2/display"
 	"github.com/cuu/gogame2/transform"
 	"github.com/cuu/gogame2/draw"
-	//"github.com/cuu/gogame/event"
+	//"github.com/cuu/gogame2/time"
 
 
 
@@ -66,6 +66,7 @@ type Pico8 struct{
 
 	Resource map[string]string
 	
+	ToFlip bool
 
 	frames int
 	curr_time int
@@ -153,64 +154,58 @@ func (self *Pico8) SyncDrawPal() {
 
 }
 
-
 func (self *Pico8) Flip() {
-	if self.HWND != nil {
-		blit_rect := rect.NewRect(self.CameraDx,self.CameraDy)
+    
+    window   := display.GetWindow()
+    _w,_h := window.GetSize()
+    window_w := int(_w)
+    window_h := int(_h)
+
+    if self.HWND != nil {
+	blit_rect := rect.NewRect(self.CameraDx,self.CameraDy)
 		
-		window   := display.GetWindow()
-		_w,_h := window.GetSize()
-		window_w := int(_w)
-		window_h := int(_h)
+	//surface.Fill(self.DisplayCanvas,color.NewColor(3,5,10,255))
 		
-		surface.Fill(self.DisplayCanvas,color.NewColor(3,5,10,255))
+	self.DisplayCanvas.SetPalette(self.DisplayPalette)
+	surface.Blit(self.DisplayCanvas,self.DrawCanvas,blit_rect,nil)
 		
-		self.DisplayCanvas.SetPalette(self.DisplayPalette)
-				
-		surface.Blit(self.DisplayCanvas,self.DrawCanvas,blit_rect,nil)
+	if window_w > self.Width && window_h > self.Height {
 		
-		
-		if window_w > self.Width && window_h > self.Height {
-		
-			bigger_border := window_w
-			if bigger_border > window_h {
-				bigger_border = window_h
-			}
+		bigger_border := window_w
+		if bigger_border > window_h {
+			bigger_border = window_h
+		}
 			
-			_blit_x := (window_w - bigger_border)/2
-			_blit_y := (window_h - bigger_border)/2
+		_blit_x := (window_w - bigger_border)/2
+		_blit_y := (window_h - bigger_border)/2
 			
-			bigger := transform.Scale(self.DisplayCanvas,bigger_border,bigger_border)
+		bigger := transform.Scale(self.DisplayCanvas,bigger_border,bigger_border)
 			
-			_r := rect.NewRect(_blit_x,_blit_y)
-			surface.Blit(self.HWND,bigger,_r,nil)
+		_r := rect.NewRect(_blit_x,_blit_y)
+		surface.Blit(self.HWND,bigger,_r,nil)
 			
-		} else {
-			_r := rect.NewRect()
-			surface.Blit(self.HWND,self.DisplayCanvas,_r,nil)
-		}		
+	} else {
+ 		
+		_r := rect.NewRect()
+		surface.Blit(self.HWND,self.DisplayCanvas,_r,nil)
+	}		
 		
-		surface.Fill(self.DisplayCanvas,color.NewColor(0,0,0,255))
+		//surface.Fill(self.DisplayCanvas,color.NewColor(0,0,0,255))
 		
-		self.ClipRect = nil
-		self.CameraDx = 0
-		self.CameraDy = 0
+	self.ClipRect = nil
+	self.CameraDx = 0
+	self.CameraDy = 0
 		
-	}
-
-	display.UpdatePixels()
-
-        self.frames+=1
-        self.curr_time = int(sdl.GetTicks())
-        if self.curr_time - self.prev_time > 10000 {
-	  self.fps = self.frames / 10
-          fmt.Println("pico8 fps is ",self.fps)
-          self.frames = 0
-          self.prev_time = self.curr_time
-        }
-
-
-
+    }
+    
+    self.frames+=1
+    self.curr_time = int(sdl.GetTicks())
+    if self.curr_time - self.prev_time > 10000 {
+	self.fps = self.frames / 10
+	fmt.Println("pico8 fps is ",self.fps)
+	self.frames = 0
+	self.prev_time = self.curr_time
+    }
 }
 
 

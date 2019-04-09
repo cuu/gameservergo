@@ -26,7 +26,6 @@ func NewGameClient() *GameClient {
 
 
 func start_tcp_client(gs *GameClient) {
-  
   conn, err := net.Dial("tcp", "127.0.0.1:8081")
   if err != nil {
     panic(err)
@@ -35,16 +34,13 @@ func start_tcp_client(gs *GameClient) {
   reader := bufio.NewReader(conn)
   var ret string
   
-  
   for {
-    
     message, _ := reader.ReadString('\n')
     //fmt.Println( len(message))
     ret = gs.GameThread.ProcessCmd(message)
     conn.Write([]byte(ret+"\n"))
     
   }
-  
 }
 
 func main() {

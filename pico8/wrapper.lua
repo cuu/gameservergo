@@ -124,8 +124,8 @@ function draw(cart)
 		if cart._draw   then cart._draw() end
 		
 		--api.sleep(frame_time/30)
-		api.flip()
 		--frames= frames+1
+		api.flip()
 	end
 
 end
