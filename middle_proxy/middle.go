@@ -10,11 +10,11 @@ import (
 )
 
 const (
-    CONN_HOST_A = "localhost"
+    CONN_HOST_A = "0.0.0.0"
     CONN_PORT_A = "8080"
     CONN_TYPE = "tcp"
 		
-		CONN_HOST_B="localhost"
+		CONN_HOST_B="0.0.0.0"
 		CONN_PORT_B = "8081"
 		
 		MAX_CLIENTS = 2
