@@ -116,7 +116,17 @@ function api.btnp(i,p)
 	
 end
 
-function api.mget(x,y)
+function api.mget(x,y) 
+
+  if x == nil or y == nil then return 0 end
+  if y > 63 or x > 127 or x < 0 or y < 0 then return 0 end
+
+
+  return pico8.map[api.flr(y)][api.flr(x)]
+
+end
+
+function api.mget_remote(x,y)
 	if x == nil or y == nil then return 0 end
 
 	local ret = server.mget(x,y)
@@ -235,6 +245,14 @@ function api.load_p8_text(filename)
   local musicdata = nil
   local mapdata = nil 
 
+	pico8.gfx = {}
+	for x=0,127 do
+		pico8.gfx[x]={}
+		for y=0,127 do
+			pico8.gfx[x][y]=0
+		end
+	end
+
   pico8.map = {}
   local __pico_quads = {}
   for y=0,63 do
@@ -310,10 +328,55 @@ function api.load_p8_text(filename)
     if gfx_end == nil then 
       gfx_end = #data
     else
-      gfx_end  = gfx_end - 2
+      gfx_end  = gfx_end - 1
     end
 
     gfxdata = data:sub(gfx_start,gfx_end)
+		
+		local row = 0
+		local col = 0
+		local next_line = 1
+		local shared = 0
+	
+		while next_line do
+				local end_of_line = gfxdata:find(eol_chars,next_line)
+				if end_of_line == nil then break end
+				end_of_line = end_of_line - 1
+				local line = gfxdata:sub(next_line,end_of_line)
+				if #line > 10 then
+					for i=1,#line do
+						local v = line:sub(i,i)
+						v = tonumber(v,16)
+						pico8.gfx[col][row] = v
+						col = col + 1
+						if col == 128 then
+							col =0 
+							row = row +1
+						end
+				  end
+				end
+				next_line = gfxdata:find(eol_chars,end_of_line)+#eol_chars
+		end
+		
+		if version > 3 then	
+			local tx,ty = 0,32
+			for sy=64,127 do
+        for sx=0,127,2 do
+          -- get the two pixel values and merge them
+          local lo = pico8.gfx[sx][sy]
+          local hi = pico8.gfx[sx+1][sy]
+          local v = api.bor(api.shl(hi,4),lo)
+          pico8.map[ty][tx] = v
+          shared = shared + 1
+          tx = tx + 1
+          if tx == 128 then 
+            tx = 0
+            ty = ty + 1
+          end
+        end
+      end		
+			print("shared map:",shared)
+		end
   end 
 
       -- load the sprite flags
@@ -367,10 +430,41 @@ function api.load_p8_text(filename)
     if map_end == nil then 
       map_end = #data
     else 
-      map_end = map_end- 2
+      map_end = map_end - 1
     end
 
     mapdata = data:sub(map_start,map_end)
+
+    local row = 0
+    local col = 0
+		local tiles = 0
+
+    local next_line = 1
+    while next_line do
+      local end_of_line = mapdata:find(eol_chars,next_line)
+      if end_of_line == nil then
+        break
+      end
+      end_of_line = end_of_line - 1
+      local line = mapdata:sub(next_line,end_of_line)
+      for i=1,#line,2 do
+        local v = line:sub(i,i+1)
+        v = tonumber(v,16)
+        if col == 0 then
+        end
+        pico8.map[row][col] = v
+        col = col + 1
+        tiles = tiles + 1
+        if col == 128 then
+          col = 0
+          row = row + 1
+        end
+      end
+      next_line = mapdata:find(eol_chars,end_of_line)+#eol_chars
+    end
+		print("map tiles: ",tiles)
+
+		
   end
 
   local sfx_start = data:find('__sfx__') 
@@ -380,7 +474,7 @@ function api.load_p8_text(filename)
     if sfx_end == nil then 
       sfx_end = #data
     else
-      sfx_end = sfx_end - 2
+      sfx_end = sfx_end - 1
     end
 
     sfxdata = data:sub(sfx_start,sfx_end)

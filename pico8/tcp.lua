@@ -7,7 +7,7 @@ local tcp = assert(socket.tcp())
 
 function TCP.connect()
   tcp:connect(host, port);
-  tcp:settimeout(0.03)
+  tcp:settimeout(0.1)
 end
 
 --local host = "/tmp/gs"
