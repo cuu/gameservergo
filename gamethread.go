@@ -143,7 +143,7 @@ func (self *GoGameThread) FlipLoop() {
   
     //self.ThePico8.Flip()
   
-    display.Flip()
+    display.UpdateWindow()
     self.Frames+=1
   
     self.CurrentTime = gotime.Now()
@@ -155,7 +155,7 @@ func (self *GoGameThread) FlipLoop() {
       self.PrevTime = self.CurrentTime
     }
     
-    time.NewClock().Tick(30)
+    //time.NewClock().Tick(30)
 
   }
 }
