@@ -54,8 +54,8 @@ type GoGameThread struct {
 func NewGoGameThread() *GoGameThread {
   p := &GoGameThread{}
   
-  p.Width =  640
-  p.Height = 480
+  p.Width =  320
+  p.Height = 240
   
   p.Inited = false
   p.DT = time.NewClock().Tick(30)
