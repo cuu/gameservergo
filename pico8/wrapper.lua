@@ -118,7 +118,6 @@ function draw(cart)
 	
 	while true do
 
-
 		if cart._update then cart._update() end
 		if cart._update60 then cart._update60() end
 
@@ -126,7 +125,7 @@ function draw(cart)
 		
 		--api.sleep(frame_time/30)
 		api.flip()
-		frames= frames+1
+		--frames= frames+1
 	end
 
 end

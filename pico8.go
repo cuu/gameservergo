@@ -66,6 +66,11 @@ type Pico8 struct{
 
 	Resource map[string]string
 	
+
+	frames int
+	curr_time int
+	prev_time  int
+	fps        int
 }
 
 func NewPico8() *Pico8 {
@@ -194,6 +199,18 @@ func (self *Pico8) Flip() {
 	}
 
 	display.UpdatePixels()
+
+        self.frames+=1
+        self.curr_time = int(sdl.GetTicks())
+        if self.curr_time - self.prev_time > 10000 {
+	  self.fps = self.frames / 10
+          fmt.Println("pico8 fps is ",self.fps)
+          self.frames = 0
+          self.prev_time = self.curr_time
+        }
+
+
+
 }
 
 

@@ -150,7 +150,7 @@ func (self *GoGameThread) FlipLoop() {
   
     if self.CurrentTime.Sub(self.PrevTime) > 10*gotime.Second {
       fps := self.Frames /10
-      print("fps is: ",fps)
+      println("fps is: ",fps)
       self.Frames = 0
       self.PrevTime = self.CurrentTime
     }
