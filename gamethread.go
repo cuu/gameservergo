@@ -9,16 +9,16 @@ import(
 //   "github.com/veandco/go-sdl2/sdl"
 
 
-     //"github.com/cuu/gogame"
+     //"github.com/cuu/gogame2"
     
-    "github.com/cuu/gogame/color"
-    "github.com/cuu/gogame/event"
+    "github.com/cuu/gogame2/color"
+    "github.com/cuu/gogame2/event"
 
-    "github.com/cuu/gogame/time"
-    "github.com/cuu/gogame/display"
-    "github.com/cuu/gogame/font"
-    //"github.com/cuu/gogame/draw"
-    //"github.com/cuu/gogame/rect"
+    "github.com/cuu/gogame2/time"
+    "github.com/cuu/gogame2/display"
+    "github.com/cuu/gogame2/font"
+    //"github.com/cuu/gogame2/draw"
+    //"github.com/cuu/gogame2/rect"
 
 
 )
@@ -143,7 +143,7 @@ func (self *GoGameThread) FlipLoop() {
   
     //self.ThePico8.Flip()
   
-    display.UpdateWindow()
+    display.Flip()
     self.Frames+=1
   
     self.CurrentTime = gotime.Now()

@@ -7,14 +7,14 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 
-	"github.com/cuu/gogame/surface"
-	"github.com/cuu/gogame/rect"
+	"github.com/cuu/gogame2/surface"
+	"github.com/cuu/gogame2/rect"
 
-	"github.com/cuu/gogame/color"
-	"github.com/cuu/gogame/font"
-	"github.com/cuu/gogame/display"
-	"github.com/cuu/gogame/transform"
-	"github.com/cuu/gogame/draw"
+	"github.com/cuu/gogame2/color"
+	"github.com/cuu/gogame2/font"
+	"github.com/cuu/gogame2/display"
+	"github.com/cuu/gogame2/transform"
+	"github.com/cuu/gogame2/draw"
 	//"github.com/cuu/gogame/event"
 
 
@@ -153,9 +153,10 @@ func (self *Pico8) Flip() {
 	if self.HWND != nil {
 		blit_rect := rect.NewRect(self.CameraDx,self.CameraDy)
 		
-		window_surface := display.GetSurface()
-		window_w := surface.GetWidth(window_surface)
-		window_h := surface.GetHeight(window_surface)
+		window   := display.GetWindow()
+		_w,_h := window.GetSize()
+		window_w := int(_w)
+		window_h := int(_h)
 		
 		surface.Fill(self.DisplayCanvas,color.NewColor(3,5,10,255))
 		
@@ -191,7 +192,8 @@ func (self *Pico8) Flip() {
 		self.CameraDy = 0
 		
 	}
-	display.UpdateWindowSurface()
+
+	display.UpdatePixels()
 }
 
 
