@@ -34,7 +34,8 @@ func start_tcp_client(gs *GameClient) {
   
   reader := bufio.NewReader(conn)
   var ret string
-
+  
+  
   for {
     
     message, _ := reader.ReadString('\n')

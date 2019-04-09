@@ -82,9 +82,9 @@ func NewGoGameThread() *GoGameThread {
 func (self*GoGameThread) InitWindow(){
   if self.Inited == false {
       self.Inited = true
-    	display.Init()
-	    font.Init()
-	    screen := display.SetMode(int32(self.Width),int32(self.Height),0,32)
+      display.Init()
+      font.Init()
+      screen := display.SetMode(int32(self.Width),int32(self.Height),0,32)
   
       self.ThePico8 = NewPico8()
       self.ThePico8.HWND = screen
@@ -155,7 +155,7 @@ func (self *GoGameThread) FlipLoop() {
       self.PrevTime = self.CurrentTime
     }
     
-    //time.NewClock().Tick(30)
+    time.NewClock().Tick(30)
 
   }
 }
