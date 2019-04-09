@@ -191,6 +191,7 @@ func (self *Pico8) Flip() {
 		self.CameraDy = 0
 		
 	}
+	display.UpdateWindowSurface()
 }
 
 
