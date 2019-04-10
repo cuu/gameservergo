@@ -5,6 +5,7 @@ import(
     "sync"
     "encoding/json"
     "strconv"
+    "net"
     gotime "time"
 //   "github.com/veandco/go-sdl2/sdl"
 
@@ -49,6 +50,9 @@ type GoGameThread struct {
   CurrentTime gotime.Time
 
   KeyLog sync.Map
+  
+  UdpConn net.Conn
+  
 }
 
 func NewGoGameThread() *GoGameThread {
@@ -75,7 +79,13 @@ func NewGoGameThread() *GoGameThread {
   p.KeyLog.Store("Return",-1)
   p.KeyLog.Store("Escape",-1)
   
-  
+
+  conn, err := net.Dial("udp", "127.0.0.1:8081")
+  if err != nil {
+    panic(fmt.Sprintln("Udp Dial error %v", err))
+  }  
+  p.UdpConn = conn
+
   return p 
 }
 
@@ -115,19 +125,12 @@ func (self*GoGameThread) EventLoop() {
       if ev.Data["Key"] == "Escape" {
         break
       }
-      
-
-      if val,ok := self.KeyLog.Load(ev.Data["Key"]); ok {
-	
-	self.KeyLog.Store(ev.Data["Key"],(val.(int)+1))
-
-      }else {
-	self.KeyLog.Store(ev.Data["Key"],1)
-      }
+      fmt.Fprintf(self.UdpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Down"))
 
     }
     if ev.Type == event.KEYUP {
       self.KeyLog.Store(ev.Data["Key"],-1)
+      fmt.Fprintf(self.UdpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Up"))
     }
     
     time.SDL_Delay(30)
@@ -241,10 +244,13 @@ type ACmd struct {
 
 func (self *GoGameThread) ProcessCmd(cmd string) string {
   
+  if len(cmd) == 0 {
+    return "Error"
+  }
   acmd := &ACmd{}
 
   if err := json.Unmarshal([]byte(cmd), &acmd); err != nil {
-    panic(fmt.Sprintln(err,cmd))
+    panic(fmt.Sprintf("%v,%s,%d",err,cmd,len(cmd)))
     return "Error"
   }
   

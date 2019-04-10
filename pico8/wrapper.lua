@@ -113,6 +113,13 @@ end
 
 local frames = 0
 local frame_time = 1/api.pico8.fps
+socket = require("socket")
+
+function sleep(sec)
+    socket.sleep(sec)
+end
+
+
 	
 function draw(cart)
 	
@@ -123,7 +130,7 @@ function draw(cart)
 
 		if cart._draw   then cart._draw() end
 		
-		--api.sleep(frame_time/30)
+		sleep(frame_time)
 		--frames= frames+1
 		api.flip()
 	end

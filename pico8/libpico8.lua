@@ -1,6 +1,7 @@
 log = print
 local api = { loaded_code = nil }
 local bit = require('bit')
+local effil = require("effil")
 
 api.band = bit.band
 api.bor = bit.bor
@@ -9,18 +10,21 @@ api.bnot = bit.bnot
 api.shl = bit.lshift
 api.shr = bit.rshift
 
-local __keymap = {
-  [0] = {
-    [0] = 'Left',
-    [1] = 'Right',
-    [2] = 'Up',
-    [3] = 'Down',
-    [4] = 'U',
-    [5] = 'I',
-    [6] = 'Return',
-    [7] = 'Escape',
-  }
+local _player = {
+    [1] = {[0]='Left',[1]=-1},
+    [2] = {[0]='Right',[1] = -1},
+    [3] = {[0]='Up', [1] = -1},
+    [4] = {[0]='Down',[1] = -1},
+    [5] = {[0]='U', [1] = -1 },
+    [6] = {[0]='I', [1] = -1 },
+    [7] = {[0]='Return',[1]=-1},
+    [8] = {[0]='Escape',[1]=-1},
 }
+
+local __keymap = effil.table {
+	[0] = _player
+}
+
 
 local pico8 = {
   clip = nil, 
@@ -41,6 +45,44 @@ local pico8 = {
 local server = require("server")
 
 api.pico8 = pico8 
+
+function udp_data_loop(keymap)
+	local UDP = require("udp")
+	UDP.init()
+ 
+	local data
+	local data_array
+	local key 
+	local action
+	local pos
+	while true do
+	  data = UDP.data()
+		pos = data:find(",")
+		if pos ~= nil then
+			key = data:sub(0,pos-1)
+			action = data:sub(pos+1,#data-1)
+		end
+		for i,v in ipairs(keymap[0]) do
+			if v[0] == key then
+				if action == "Down" then
+					keymap[0][i][1] = 1
+				end
+				if action == "Up" then
+					keymap[0][i][1] = -1
+				end
+
+				break
+			end
+		end 
+	end 
+end
+
+
+local thr = effil.thread(udp_data_loop)(__keymap)
+if thr == nil then
+	print("udp start failed")
+	exit()
+end
 
 function api.color(c)
   c = c and math.floor(c) or 0 
@@ -76,6 +118,27 @@ function api.flip()
 end
 
 function api.btn(i,p)
+	local thing
+	local ret
+	
+	if type(i) == 'number' then
+		i = i +1
+		p = p or 0
+		if __keymap[p] and __keymap[p][i] then
+			ret =  __keymap[p][i][1]
+			if ret >= 0 then
+				return true
+			else
+				return false
+			end
+		end
+	end
+	
+	return false
+
+end
+
+function api.btn_remote(i,p)
 	local thing
 	local ret
 	

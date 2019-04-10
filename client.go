@@ -2,7 +2,7 @@ package main
 
 import (
   //"fmt"
-  
+   "io"
   "net"
   "bufio"
   "github.com/veandco/go-sdl2/sdl"
@@ -31,15 +31,21 @@ func start_tcp_client(gs *GameClient) {
     panic(err)
   }
   
-  reader := bufio.NewReader(conn)
   var ret string
-  
+  reader := bufio.NewReader(conn)
   for {
-    message, _ := reader.ReadString('\n')
+    message, err := reader.ReadString('\n')
     //fmt.Println( len(message))
-    ret = gs.GameThread.ProcessCmd(message)
-    conn.Write([]byte(ret+"\n"))
-    
+    if len(message) > 0 {
+      ret = gs.GameThread.ProcessCmd(message)
+      conn.Write([]byte(ret+"\n"))
+    }
+
+    if err != nil {
+      if err != io.EOF {
+	panic(err)
+      }
+    }
   }
 }
 

@@ -7,7 +7,7 @@ local tcp = assert(socket.tcp())
 
 function TCP.connect()
   tcp:connect(host, port);
-  tcp:settimeout(0.1)
+  tcp:settimeout(5)
 end
 
 --local host = "/tmp/gs"
@@ -31,12 +31,9 @@ function TCP.send(data)
   data = data.."\n"
   
   ret,msg = tcp:send(data)
-  if(ret ~= nil) then
-	    ret2 = tcp:receive("*l")
-  	  return ret2
-    else
-      print("exiting...",msg)
-      os.exit()
+  if(ret == nil) then
+	  print("exiting...",msg)
+  	os.exit()
   end
   
 	return nil
