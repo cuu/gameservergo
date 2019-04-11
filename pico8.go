@@ -626,9 +626,6 @@ func (self *Pico8) Circ(args ...CmdArg) {
 
 }
 
-
-
-
 func (self *Pico8) Circfill(args ...CmdArg) {
   var cx,cy,r,col int
   col = -1

@@ -111,18 +111,27 @@ function new_sandbox()
 end
 
 
+socket = require("socket")
 local frames = 0
 local frame_time = 1/api.pico8.fps
-socket = require("socket")
+local prev_time = 0
+local curr_time = 0
+local skip = 0
 
 function sleep(sec)
     socket.sleep(sec)
 end
 
+function time_ms() 
+	return socket.gettime()*1000
+end
 
 	
 function draw(cart)
 	
+	curr_time = time_ms()
+	prev_time = time_ms()
+	local frame_time_ms = frame_time*1000
 	while true do
 
 		if cart._update then cart._update() end
@@ -130,9 +139,16 @@ function draw(cart)
 
 		if cart._draw   then cart._draw() end
 		
-		sleep(frame_time)
-		--frames= frames+1
+		curr_time = time_ms()
+		
+		if curr_time - prev_time < frame_time_ms then
+			sleep(frame_time)
+		end
+
 		api.flip()
+
+		prev_time = curr_time
+
 	end
 
 end
