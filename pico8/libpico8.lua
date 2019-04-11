@@ -78,11 +78,11 @@ function udp_data_loop(keymap)
 end
 
 
---local udp_thr = effil.thread(udp_data_loop)(__keymap)
---if udp_thr == nil then
---	print("udp start failed")
---	exit()
---end
+local udp_thr = effil.thread(udp_data_loop)(__keymap)
+if udp_thr == nil then
+	print("udp start failed")
+	exit()
+end
 
 function tcp_data_loop(keymap) 
 	local TCP = require("tcp")
@@ -115,11 +115,11 @@ function tcp_data_loop(keymap)
 end
 
 
-local tcp_thr = effil.thread(tcp_data_loop)(__keymap)
-if tcp_thr == nil then
-	print("tcp start failed")
-	exit()
-end
+--local tcp_thr = effil.thread(tcp_data_loop)(__keymap)
+--if tcp_thr == nil then
+--	print("tcp start failed")
+--	exit()
+--end
 
 
 function api.color(c)
