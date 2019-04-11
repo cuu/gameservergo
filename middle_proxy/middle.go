@@ -22,22 +22,14 @@ const (
 		MAX_CLIENTS = 2
 )
 
-var ResetPeer = 0
-
 type Client struct {
 	conn   net.Conn
-  
   udp_conn *net.UDPConn
   udp_client_addr *net.UDPAddr
-  
   Bind   int
-
 }
 
-func (c *Client) listen_tcp( id int) {
-	if id < MAX_CLIENTS {
-    TheTCPClients[id] = c
-	}
+func (c *Client) listen_tcp( id int) {  
   
 	message := make([]byte, 1024)
 	reader := bufio.NewReader(c.conn)
@@ -49,20 +41,24 @@ func (c *Client) listen_tcp( id int) {
 				fmt.Println("Un EOF error: ",err)
 			}
 			c.conn.Close()
+      
       for i:=0;i<MAX_CLIENTS;i++ {
-        if TheTCPClients[i] != nil {
-          TheTCPClients[i].conn.Close()
+        if TheTCPClients[c.Bind][i] != nil {
+          TheTCPClients[c.Bind][i].conn.Close()
+          TheTCPClients[c.Bind][i] = nil
         }
       }
+
 			break
 		}else {
-      ExchangeTCP(id,message[:read_number])
+      ExchangeTCP(id,c.Bind,message[:read_number])
     
       for i:=0;i<1024;i++ {
         message[i]=0
       }
     }
 	}
+  
 }
 
 func (c *Client) listen_udp( id int) {
@@ -113,7 +109,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-var TheTCPClients [MAX_CLIENTS]*Client
+var TheTCPClients [][MAX_CLIENTS]*Client
 var TheUDPClients [MAX_CLIENTS]*Client
 
 func serverTCP_A() {
@@ -129,8 +125,32 @@ func serverTCP_A() {
 				client := &Client{
 					conn:   conn,
 				}
-				
-				client.listen_tcp(0)
+        
+        has_seat := -1
+        
+        for i:=0;i<len(TheTCPClients);i++ {
+          if TheTCPClients[i][0] == nil {
+            has_seat = i
+            break
+          }
+        }
+        
+        if has_seat == -1 {
+          var clients [MAX_CLIENTS]*Client
+          clients[0] = client
+          clients[1] = nil
+          TheTCPClients = append(TheTCPClients,clients)
+          has_seat = len(TheTCPClients)-1
+        }else{
+          
+            if TheTCPClients[has_seat][0] == nil {
+              TheTCPClients[has_seat][0] = client // take seat
+
+            }
+        }
+        
+        client.Bind = has_seat
+				go client.listen_tcp(0)
 				
     }
 }
@@ -149,21 +169,43 @@ func serverTCP_B() {
 					conn:   conn,
 				}
 
-				client.listen_tcp(1)
+        has_seat := -1
+        
+        for i:=0;i<len(TheTCPClients);i++ {
+          if TheTCPClients[i][1] == nil {
+            has_seat = i
+            break
+          }
+        }
+        
+        if has_seat == -1 {
+          var clients [MAX_CLIENTS]*Client
+          clients[0] = nil
+          clients[1] = client
+          TheTCPClients = append(TheTCPClients,clients)
+          has_seat = len(TheTCPClients)-1
+        }else{
+          if TheTCPClients[has_seat][1] == nil {
+              TheTCPClients[has_seat][1] = client // take seat
+          }
+        }
+        client.Bind = has_seat
+				go client.listen_tcp(1)
     }
 }
 
-func ExchangeTCP(id int,message []byte) {
-	if id == 1 {
-		if TheTCPClients[0] != nil {
-			TheTCPClients[0].SendBytes(message)
-		}
-	}else if id == 0{
-		
-		if TheTCPClients[1] != nil {
-			TheTCPClients[1].SendBytes(message)
-		}
-	}
+func ExchangeTCP(id int,seat_number int,message []byte) {
+ 
+    if id == 1 {
+      if TheTCPClients[seat_number][0] != nil {
+        TheTCPClients[seat_number][0].SendBytes(message)
+      } 
+    }else if id == 0{
+      if TheTCPClients[seat_number][1] != nil {
+        TheTCPClients[seat_number][1].SendBytes(message)
+      }
+    }
+  
 }
 
 

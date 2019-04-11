@@ -18,6 +18,14 @@ end
 --  tcp:connect(host)
 --  tcp:settimeout(5)
 --end
+function TCP.get()
+	local ret
+	ret,msg = tcp:receive("*l")
+	if ret == nil then
+		print(msg)
+	end
+	return ret
+end
 
 function TCP.send(data)
   local ret,msg

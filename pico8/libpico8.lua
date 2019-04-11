@@ -78,11 +78,49 @@ function udp_data_loop(keymap)
 end
 
 
-local thr = effil.thread(udp_data_loop)(__keymap)
-if thr == nil then
-	print("udp start failed")
+--local udp_thr = effil.thread(udp_data_loop)(__keymap)
+--if udp_thr == nil then
+--	print("udp start failed")
+--	exit()
+--end
+
+function tcp_data_loop(keymap) 
+	local TCP = require("tcp")
+	local data
+
+	TCP.connect()	
+	while true do
+		data = TCP.get()
+		print("tcp get ",data)
+		if data ~= nil then
+			pos = data:find(",")
+			if pos ~= nil then
+				key = data:sub(0,pos-1)
+				action = data:sub(pos+1,#data)
+			end
+			for i,v in ipairs(keymap[0]) do
+				if v[0] == key then
+					if action == "Down" then
+						keymap[0][i][1] = 1
+					end
+					if action == "Up" then
+						keymap[0][i][1] = -1
+					end
+					break
+				end
+			end
+		end
+	end
+
+end
+
+
+local tcp_thr = effil.thread(tcp_data_loop)(__keymap)
+if tcp_thr == nil then
+	print("tcp start failed")
 	exit()
 end
+
 
 function api.color(c)
   c = c and math.floor(c) or 0 

@@ -52,7 +52,7 @@ type GoGameThread struct {
   KeyLog sync.Map
   
   UdpConn net.Conn
-  
+  TcpConn net.Conn
 }
 
 func NewGoGameThread() *GoGameThread {
@@ -79,13 +79,6 @@ func NewGoGameThread() *GoGameThread {
   p.KeyLog.Store("Return",-1)
   p.KeyLog.Store("Escape",-1)
   
-
-  conn, err := net.Dial("udp", "127.0.0.1:8081")
-  if err != nil {
-    panic(fmt.Sprintln("Udp Dial error %v", err))
-  }  
-  p.UdpConn = conn
-
   return p 
 }
 
@@ -125,12 +118,12 @@ func (self*GoGameThread) EventLoop() {
       if ev.Data["Key"] == "Escape" {
         break
       }
-      fmt.Fprintf(self.UdpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Down"))
+      fmt.Fprintf(self.TcpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Down"))
 
     }
     if ev.Type == event.KEYUP {
       self.KeyLog.Store(ev.Data["Key"],-1)
-      fmt.Fprintf(self.UdpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Up"))
+      fmt.Fprintf(self.TcpConn,fmt.Sprintf("%s,%s\n",ev.Data["Key"],"Up"))
     }
     
     time.SDL_Delay(30)
@@ -181,6 +174,16 @@ func (self *GoGameThread) Btn(args []CmdArg) string {
 
 }
 
+func (self *GoGameThread) StartTcp() {
+
+  conn, err := net.Dial("tcp", "127.0.0.1:8081")
+  if err != nil {
+    panic(fmt.Sprintln("tcp Dial error %v", err))
+  }  
+  self.TcpConn = conn
+
+}
+
 func (self *GoGameThread) Run() int {
 
   self.InitWindow()
@@ -188,6 +191,7 @@ func (self *GoGameThread) Run() int {
   go self.FlipLoop()
   
   //go self.ThePico8.FlipLoop()
+  self.StartTcp()
 
   self.EventLoop()  
 
