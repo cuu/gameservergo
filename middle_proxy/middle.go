@@ -70,10 +70,11 @@ func (c *Client) listen_udp( id int) {
   for {
       n, addr, err := c.udp_conn.ReadFromUDP(message)
 
-      fmt.Println("UDP client : ", addr,",Read ", n)
+      //fmt.Println("UDP client : ", addr,",Read ", n)
 
       if err != nil {
-             log.Fatal(err)
+        
+        log.Fatal(err)
       }
       c.udp_client_addr = addr
       ExchangeUDP(id,message[:n])
@@ -228,7 +229,7 @@ func serverUDP_A() {
 				client := &Client{
 					udp_conn: l,
 				}
-				
+        
 				client.listen_udp(0)
 				
     }
@@ -257,7 +258,7 @@ func serverUDP_B() {
     }
 }
 
-func ExchangeUDP(id int,message []byte) {
+func ExchangeUDP(id int, message []byte) {
 	if id == 1 {
 		if TheUDPClients[0] != nil {
       

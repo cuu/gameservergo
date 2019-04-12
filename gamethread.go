@@ -184,15 +184,6 @@ func (self *GoGameThread) StartTcp() {
 
 }
 
-func (self *GoGameThread) StartUdp() {
-
-  conn, err := net.Dial("udp", "127.0.0.1:8081")
-  if err != nil {
-    panic(fmt.Sprintln("tcp Dial error %v", err))
-  }  
-  self.UdpConn = conn
-
-}
 func (self *GoGameThread) Run() int {
 
   self.InitWindow()
@@ -200,7 +191,7 @@ func (self *GoGameThread) Run() int {
   go self.FlipLoop()
   
   //go self.ThePico8.FlipLoop()
-  self.StartUdp()
+  //self.StartUdp()
 
   self.EventLoop()  
 
@@ -251,6 +242,7 @@ func (self *CmdArg) GetBool() bool {
 }
 
 type ACmd struct {
+  Role string `json:"Role"` 
   Func string  `json:"Func"`
   Args []CmdArg `json:"Args"`
 }
@@ -263,7 +255,7 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
   acmd := &ACmd{}
 
   if err := json.Unmarshal([]byte(cmd), &acmd); err != nil {
-    panic(fmt.Sprintf("%v,%s,%d",err,cmd,len(cmd)))
+    fmt.Println(fmt.Sprintf("%v,%s,%d",err,cmd,len(cmd)))
     return "Error"
   }
   

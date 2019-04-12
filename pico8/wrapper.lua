@@ -1,6 +1,108 @@
 require 'strict'
+
+local _player = {
+    [1] = {[0]='Left',[1]=-1},
+    [2] = {[0]='Right',[1] = -1},
+    [3] = {[0]='Up', [1] = -1},
+    [4] = {[0]='Down',[1] = -1},
+    [5] = {[0]='U', [1] = -1 },
+    [6] = {[0]='I', [1] = -1 },
+    [7] = {[0]='Return',[1]=-1},
+    [8] = {[0]='Escape',[1]=-1},
+}
+
+local __keymap = {
+	[0] = _player
+}
+
+local coroutine_scheduler = require("coroutine_scheduler")
+sched = coroutine_scheduler.Scheduler()
+
+socket = require("socket")
+
+function sleep(sec)
+    socket.sleep(sec)
+end
+
+function time_ms() 
+	return socket.gettime()*1000
+end
+
 --local api = require 'libpico8_unix_socket'
-local api = require 'libpico8'
+
+local server = require("server")
+local api = require("libpico8")
+
+api.server = server 
+
+local UDP = {}
+local udp = assert(socket.udp())
+
+function UDP.connect()
+	assert(udp:setpeername("127.0.0.1",8080))
+	udp:settimeout()
+	udp:send("ping")
+end
+
+function UDP.send(data) -- must inside lua's coroutine
+  local ret,msg
+  local ret2
+  -- print("safe_tcp_send data is " ,data ,#data)
+  if #data == 0 then 
+    print("data is zero",data)
+    return nil
+  end
+  
+  data = data.."\n"
+  
+  ret,msg = udp:send(data)
+  if(ret == nil) then
+	  print("exiting...",msg)
+  	os.exit()
+  end
+  
+  sched:suspend(udp)
+  
+	return nil
+end
+
+UDP.connect()
+
+server.Network = UDP
+
+local TCP= {}
+
+local tcp = assert(socket.tcp())
+
+function TCP.connect()
+  local host, port = "127.0.0.1", 8080
+  tcp:connect(host, port);
+  tcp:settimeout(5)
+end
+
+function TCP.send(data)
+  local ret,msg
+  local ret2
+  -- print("safe_tcp_send data is " ,data ,#data)
+  if #data == 0 then 
+    print("data is zero",data)
+    return nil
+  end
+  
+  data = data.."\n"
+  
+  ret,msg = tcp:send(data)
+  if(ret == nil) then
+	  print("exiting...",msg)
+  	os.exit()
+  end
+  
+	return nil
+end
+
+TCP.connect()
+
+server.NetworkTCP = TCP
 
 log = print
 
@@ -111,27 +213,71 @@ function new_sandbox()
 end
 
 
-socket = require("socket")
-local frames = 0
-local frame_time = 1/api.pico8.fps
-local prev_time = 0
-local curr_time = 0
-local skip = 0
+function set_keymap(data,keymap)
 
-function sleep(sec)
-    socket.sleep(sec)
+	local data_array
+	local key 
+	local action
+	local pos
+  
+  pos = data:find(",")
+  if pos ~= nil then
+    key = data:sub(0,pos-1)
+    action = data:sub(pos+1,#data-1)
+  end
+  
+  for i,v in ipairs(keymap[0]) do
+		if v[0] == key then
+			if action == "Down" then
+				keymap[0][i][1] = 1
+			end
+			if action == "Up" then
+				keymap[0][i][1] = -1
+			end
+      break
+		end
+	end 
+  
+  return nil
+
 end
 
-function time_ms() 
-	return socket.gettime()*1000
-end
 
+function GetBtnLoop()
+  local count = 0 
+  local framerate = 1/1200
+  udp:send("ping")
+  while true do
+    udp:settimeout( framerate )
+    local s, status = udp:receive()
+    if s ~= nil then
+      count = count + string.len(s)
+      print("received: ",s)
+      set_keymap(s,__keymap)
+    end
+				
+    if status == "timeout" then
+      sched:suspend(udp)
+    end
+    if status == "closed" then
+      print("closed....")
+      break
+    end
+  end
+end
 	
 function draw(cart)
-	
+
+  local frames = 0
+  local frame_time = 1/api.pico8.fps
+  local prev_time = 0
+  local curr_time = 0
+  local skip = 0  
+  
 	curr_time = time_ms()
 	prev_time = time_ms()
 	local frame_time_ms = frame_time*1000
+  
 	while true do
 
 		if cart._update then cart._update() end
@@ -153,7 +299,35 @@ function draw(cart)
 
 end
 
+function api.btn(i,p)
+	local thing
+	local ret
+	
+	if type(i) == 'number' then
+		i = i +1
+		p = p or 0
+		if __keymap[p] and __keymap[p][i] then
+			ret =  __keymap[p][i][1]
+			if ret >= 0 then
+				return true
+			else
+				return false
+			end
+		end
+	end
+	
+	return false
+
+end
+
 function api.run()
+  
+end
+
+function RunLoop(file)
+  
+  api.load_p8_text(file)
+  
 	local cart = new_sandbox()
 	local ok,f,e = pcall(load,api.loaded_code)
   if not ok or f==nil then
@@ -172,15 +346,33 @@ function api.run()
     end
 
 		if cart._init then cart._init() end
-		
-		draw(cart)
+    
+		 draw(cart)
+     
   end
 end
 
+
+
+--------------------------------------------
 function main(file)
-	api.load_p8_text(file)
-	
-	api.run()
+
+	sched:spawn(RunLoop,file)
+  
+  sched:spawn(GetBtnLoop)
+  
+  while true do
+    local worked, t = sched:select()
+    if worked then
+        if t and t ~= 0 then
+            if socket then socket.sleep(t) end
+        end
+    else
+        print(worked, t)
+        break
+    end
+  end
+
 
 end
 

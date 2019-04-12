@@ -1,12 +1,15 @@
 package main
 
 import (
-  //"fmt"
+  "fmt"
+  //"log"
+  
    "io"
   "net"
   "bufio"
   "github.com/veandco/go-sdl2/sdl"
-
+  
+  gotime "time"
   
 )
 //tcp server
@@ -49,12 +52,40 @@ func start_tcp_client(gs *GameClient) {
   }
 }
 
+func start_udp_client(gs *GameClient) {
+    
+    gotime.Sleep(1000 * gotime.Millisecond)
+
+    conn, err := net.Dial("udp", "127.0.0.1:8081")
+    if err != nil {
+      panic(fmt.Sprintln("tcp Dial error %v", err))
+    }  
+    
+    defer conn.Close()
+    
+    conn.Write([]byte("ping"))
+    gs.GameThread.UdpConn = conn
+    reader := bufio.NewReader(conn)
+    for {
+      
+      message, _ := reader.ReadString('\n')
+      
+      //fmt.Println( len(message))
+      if len(message) > 0 {
+	gs.GameThread.ProcessCmd(message)
+      }
+    }
+
+}
+
 func main() {
   
   gs := NewGameClient()
   
   go start_tcp_client(gs)
-  
+
+  go start_udp_client(gs)
+
   sdl.Main(func() {
     gs.GameThread.Run()
   })

@@ -1,7 +1,7 @@
 log = print
-local api = { loaded_code = nil }
+local api = { loaded_code = nil,server=nil }
+
 local bit = require('bit')
-local effil = require("effil")
 
 api.band = bit.band
 api.bor = bit.bor
@@ -9,21 +9,6 @@ api.bxor = bit.bxor
 api.bnot = bit.bnot
 api.shl = bit.lshift
 api.shr = bit.rshift
-
-local _player = {
-    [1] = {[0]='Left',[1]=-1},
-    [2] = {[0]='Right',[1] = -1},
-    [3] = {[0]='Up', [1] = -1},
-    [4] = {[0]='Down',[1] = -1},
-    [5] = {[0]='U', [1] = -1 },
-    [6] = {[0]='I', [1] = -1 },
-    [7] = {[0]='Return',[1]=-1},
-    [8] = {[0]='Escape',[1]=-1},
-}
-
-local __keymap = effil.table {
-	[0] = _player
-}
 
 
 local pico8 = {
@@ -42,139 +27,42 @@ local pico8 = {
   camera_y = 0, 
 }
 
-local server = require("server")
-
 api.pico8 = pico8 
-
-function udp_data_loop(keymap)
-	local UDP = require("udp")
-	UDP.init()
- 
-	local data
-	local data_array
-	local key 
-	local action
-	local pos
-	while true do
-	  data = UDP.data()
-		pos = data:find(",")
-		if pos ~= nil then
-			key = data:sub(0,pos-1)
-			action = data:sub(pos+1,#data-1)
-		end
-		for i,v in ipairs(keymap[0]) do
-			if v[0] == key then
-				if action == "Down" then
-					keymap[0][i][1] = 1
-				end
-				if action == "Up" then
-					keymap[0][i][1] = -1
-				end
-
-				break
-			end
-		end 
-	end 
-end
-
-
-local udp_thr = effil.thread(udp_data_loop)(__keymap)
-if udp_thr == nil then
-	print("udp start failed")
-	exit()
-end
-
-function tcp_data_loop(keymap) 
-	local TCP = require("tcp")
-	local data
-
-	TCP.connect()	
-	while true do
-		data = TCP.get()
-		print("tcp get ",data)
-		if data ~= nil then
-			pos = data:find(",")
-			if pos ~= nil then
-				key = data:sub(0,pos-1)
-				action = data:sub(pos+1,#data)
-			end
-			for i,v in ipairs(keymap[0]) do
-				if v[0] == key then
-					if action == "Down" then
-						keymap[0][i][1] = 1
-					end
-					if action == "Up" then
-						keymap[0][i][1] = -1
-					end
-					break
-				end
-			end
-		end
-	end
-
-end
-
-
---local tcp_thr = effil.thread(tcp_data_loop)(__keymap)
---if tcp_thr == nil then
---	print("tcp start failed")
---	exit()
---end
-
 
 function api.color(c)
   c = c and math.floor(c) or 0 
   assert(c >= 0 and c <= 16,string.format('c is %s',c))
-  server.color(c)
+  api.server.color(c)
 
 end
 
 function api.pset(x,y,c)
   if not c then return end 
 
-  server.pset(api.flr(x),api.flr(y),api.flr(c))
+  api.server.pset(api.flr(x),api.flr(y),api.flr(c))
 
 end
 
 
 function api.print(str,x,y,col)
-  server.print(str,x,y,col)		
+  api.server.print(str,x,y,col)		
 end
 
 function api.cursor(x,y)
-  server.cursor(x,y)
+  api.server.cursor(x,y)
 end
 
 
 function api.cls(frame)
 	frame = frame or 0
-	server.cls(frame)
+	api.server.cls(frame)
 end
 
 function api.flip()
-	server.flip()
+	api.server.flip()
 end
 
-function api.btn(i,p)
-	local thing
-	local ret
-	
-	if type(i) == 'number' then
-		i = i +1
-		p = p or 0
-		if __keymap[p] and __keymap[p][i] then
-			ret =  __keymap[p][i][1]
-			if ret >= 0 then
-				return true
-			else
-				return false
-			end
-		end
-	end
-	
-	return false
 
-end
 
 function api.btn_remote(i,p)
 	local thing
@@ -183,7 +71,7 @@ function api.btn_remote(i,p)
 	if type(i) == 'number' then
 		p = p or 0
 		if __keymap[p] and __keymap[p][i] then
-				ret = server.btn( __keymap[p][i],p)
+				ret = api.server.btn( __keymap[p][i],p)
 --				ret = "FALSE"
 				if ret == "TRUE" then
 					return true
@@ -204,7 +92,7 @@ function api.btnp(i,p)
 	if type(i) == 'number' then
 		p = p or 0
 		if __keymap[p] and __keymap[p][i] then
-				ret = server.btnp( __keymap[p][i],p)
+				ret = api.server.btnp( __keymap[p][i],p)
 				if ret == "TRUE" then
 					return true
 				else 
@@ -230,7 +118,7 @@ end
 function api.mget_remote(x,y)
 	if x == nil or y == nil then return 0 end
 
-	local ret = server.mget(x,y)
+	local ret = api.server.mget(x,y)
 	ret = tonumber(ret)
 
 	return ret
@@ -241,7 +129,7 @@ function api.mset(x,y,v)
 	if x == nil or y == nil then return end
 	v = v or 0
 
-	server.mset(api.flr(x),api.flr(y),api.flr(v))
+	api.server.mset(api.flr(x),api.flr(y),api.flr(v))
 end
 
 
@@ -622,13 +510,13 @@ function api.load_p8_text(filename)
 
   api.loaded_code = lua
 
-  server.send_pico8_version(version)
+  api.server.send_pico8_version(version)
 
-  server.send_resource("gfx",gfxdata)
-  server.send_resource("gff",gffdata:sub(1,#gffdata-1))
-  server.send_resource("sfx",sfxdata)
-  server.send_resource("map",mapdata)
-  server.send_resource("music",musicdata)
+  api.server.send_resource("gfx",gfxdata)
+  api.server.send_resource("gff",gffdata:sub(1,#gffdata-1))
+  api.server.send_resource("sfx",sfxdata)
+  api.server.send_resource("map",mapdata)
+  api.server.send_resource("music",musicdata)
 
 end
 
@@ -661,7 +549,7 @@ function api.spr(n,x,y,w,h,flip_x,flip_y)
     flip_y = 0
   end
 
-  server.spr(n, api.flr(x), api.flr(y), api.flr(w),api.flr(h),flip_x,flip_y)
+  api.server.spr(n, api.flr(x), api.flr(y), api.flr(w),api.flr(h),flip_x,flip_y)
 
 end
 
@@ -694,7 +582,7 @@ function api.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
   end
 
 
-  server.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
+  api.server.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
 end
 
 
@@ -716,7 +604,7 @@ function api.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 
   bitmask = bitmask or 0
 
-  server.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
+  api.server.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
 
 end
 
@@ -797,42 +685,42 @@ end
 
 function api.rect(x0,y0,x1,y1,col)
   if col == nil then
-  	server.rect(x0,y0,x1,y1)
+  	api.server.rect(x0,y0,x1,y1)
   else
-  	server.rect(x0,y0,x1,y1,col)
+  	api.server.rect(x0,y0,x1,y1,col)
   end
 
 end
 
 function api.rectfill(x0,y0,x1,y1,col)
   if col == nil then
-    server.rectfill(x0,y0,x1,y1)
+    api.server.rectfill(x0,y0,x1,y1)
   else
-    server.rectfill(x0,y0,x1,y1,col)
+    api.server.rectfill(x0,y0,x1,y1,col)
   end
 end
 
 function api.circ(ox,oy,r,col)
   if col == nil then
-    server.circ(ox,oy,r)
+    api.server.circ(ox,oy,r)
   else
-    server.circ(ox,oy,r,col)
+    api.server.circ(ox,oy,r,col)
   end
 end
 
 function api.circfill(cx,cy,r,col)
   if col == nil then
-    server.circfill(cx,cy,r)
+    api.server.circfill(cx,cy,r)
   else
-    server.circfill(cx,cy,r,col)
+    api.server.circfill(cx,cy,r,col)
   end
 end
 
 function api.line(x0,y0,x1,y1,col)
   if col == nil then
-    server.line(x0,y0,x1,y1)
+    api.server.line(x0,y0,x1,y1)
   else
-    server.line(x0,y0,x1,y1,col)
+    api.server.line(x0,y0,x1,y1,col)
   end
 end
 
@@ -842,11 +730,11 @@ function api.time()
 end
 
 function api.reboot()
-	server.reboot()
+	api.server.reboot()
 end
 
 function api.printh(text,filename,overwrite)
-	server.printh(text)
+	api.server.printh(text)
 end
 
 function api.pal(c0,c1,p)
@@ -866,7 +754,7 @@ function api.pal(c0,c1,p)
 		end
 	
 	
-		server.pal(c0,c1,p)
+		api.server.pal(c0,c1,p)
 			
 end
 
@@ -875,7 +763,7 @@ function api.palt(c,t)
    server.palt()
   else
    t = t or false
-   server.palt(c,t)
+   api.server.palt(c,t)
   end
 end  
 
@@ -896,7 +784,7 @@ end
 function api.fget_remote(n,f)
   if n == nil then return nil end
 	
-	local server_ret = server.fget(n,f)
+	local server_ret = api.server.fget(n,f)
 	
   local ret =  tonumber( server_ret )
 
@@ -927,9 +815,9 @@ end
 
 function api.clip(x,y,w,h)
 	if type(x) == 'number' then
-		server.clip(x,y,w,h)
+		api.server.clip(x,y,w,h)
 	else
-		server.clip()
+		api.server.clip()
 	end
 end
 
@@ -944,7 +832,7 @@ function api.camera(x,y)
     pico8.camera_y = 0
   end  
 	
-  server.restore_camera(pico8.camera_x,pico8.camera_y)
+  api.server.restore_camera(pico8.camera_x,pico8.camera_y)
 
 end
 
