@@ -6,6 +6,7 @@ import(
     "encoding/json"
     "strconv"
     "net"
+    "strings"
     gotime "time"
 //   "github.com/veandco/go-sdl2/sdl"
 
@@ -315,6 +316,17 @@ func (self *GoGameThread) ProcessCmd(cmd string) string {
   return "O"
 }
 
-
-
+func (self *GoGameThread) ProcessCmds(cmds string) string {
+  
+  if len(cmds) == 0 {
+    return "Error"
+  }
+  
+  cmd_array := strings.Split(cmds,"\n")
+  for _,v := range cmd_array {
+    self.ProcessCmd(v)
+  }
+  
+  return "O"
+}
 

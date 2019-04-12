@@ -35,7 +35,7 @@ local api = require("libpico8")
 
 api.server = server 
 
-local UDP = {}
+local UDP = { data = {} ,curr_time = 0}
 local udp = assert(socket.udp())
 
 function UDP.connect()
@@ -44,26 +44,42 @@ function UDP.connect()
 	udp:send("ping")
 end
 
-function UDP.send(data) -- must inside lua's coroutine
+function UDP.send() -- must inside lua's coroutine
   local ret,msg
-  local ret2
   -- print("safe_tcp_send data is " ,data ,#data)
-  if #data == 0 then 
-    print("data is zero",data)
+  if #UDP.data == 0 then 
+    print("data is zero",UDP.data)
     return nil
   end
+
+  for i ,v in ipairs(UDP.data) do 
   
-  data = data.."\n"
-  
-  ret,msg = udp:send(data)
-  if(ret == nil) then
-	  print("exiting...",msg)
-  	os.exit()
+    ret,msg = udp:send(v.."\n")
+    if(ret == nil) then
+      print("exiting...",msg)
+      os.exit()
+    end
+    
   end
   
+  UDP.data = {}
+    
   sched:suspend(udp)
   
 	return nil
+end
+
+function UDP.cache(data)
+  local now = time_ms()
+  --UDP.data = UDP.data..data.."\n"
+  UDP.data[#UDP.data+1] = data
+  
+  --[[
+  if now - UDP.curr_time >= 40 then
+    UDP.send()
+    UDP.curr_time = now
+  end
+  ]]
 end
 
 UDP.connect()
@@ -207,7 +223,8 @@ function new_sandbox()
 		tostr  = api.tostr,
     mapdraw = api.map,
 		run    = api.run,
-		string = string
+		string = string,
+    flip_network = api.flip_network
 
    }
 end
@@ -245,7 +262,7 @@ end
 
 function GetBtnLoop()
   local count = 0 
-  local framerate = 1/1200
+  local framerate = 1/100
   udp:send("ping")
   while true do
     udp:settimeout( framerate )
@@ -292,7 +309,8 @@ function draw(cart)
 		end
 
 		api.flip()
-
+    api.flip_network()
+    
 		prev_time = curr_time
 
 	end
@@ -322,6 +340,12 @@ end
 
 function api.run()
   
+end
+
+function api.flip_network()
+
+  UDP.send()
+
 end
 
 function RunLoop(file)

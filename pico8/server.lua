@@ -1,7 +1,7 @@
-
 json = require("json")
 
 local server = {Network=nil,NetworkTCP=nil}
+
 
 function safe_format(funcname,...)
   local ret = {Func=funcname}
@@ -39,7 +39,7 @@ end
 function server.scroll(dy)
 	dy = dy or 0
 	local thing = safe_format("scroll",dy)
-	return server.Network.send(thing)
+	return server.Network.cache(thing)
 end
 
 function server.print(str,x,y,col)
@@ -56,19 +56,19 @@ function server.print(str,x,y,col)
 		thing = safe_format("print",str,math.floor(x),math.floor(y),math.floor(col))
 	end
 
-	return server.Network.send(thing)
+	return server.Network.cache(thing)
 
 end
 
 function server.cls(frame)
 	local thing = safe_format("cls",frame)
-	return server.Network.send(thing)
+	return server.Network.cache(thing)
 
 end
 
 function server.flip()
 	local thing = safe_format("flip")
-	return server.Network.send(thing)
+	return server.Network.cache(thing)
 end
 
 function server.btn(codestr,playernumber)
@@ -83,23 +83,23 @@ end
 
 function server.sspr(sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
   local thing = safe_format("sspr", sx,sy,sw,sh,dx,dy,dw,dh,flip_x,flip_y)
-  return server.Network.send(thing)
+  return server.Network.cache(thing)
 end
 
 function server.spr(n,x,y,w,h,flip_x,flip_y)
   local thing = safe_format("spr", n,x,y,w,h,flip_x,flip_y)
-  return server.Network.send(thing)
+  return server.Network.cache(thing)
 
 end
 
 function server.map(cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
   local thing = safe_format("map",cel_x,cel_y,sx,sy,cel_w,cel_h,bitmask)
-  return server.Network.send(thing)
+  return server.Network.cache(thing)
 end
 
 function server.color(c)
   local thing = safe_format("color",c)
-  return server.Network.send(thing)
+  return server.Network.cache(thing)
 end
 
 function server.pset(x,y,c)
@@ -109,7 +109,7 @@ end
 
 function server.cursor(x,y)
   local thing = safe_format("cursor",x,y,c)
-  return server.Network.send(thing)
+  return server.Network.cache(thing)
 end
 
 function server.mget(x,y)
@@ -130,7 +130,7 @@ function server.rect(x0,y0,x1,y1,col)
   else
     thing = safe_format("rect",x0,y0,x1,y1,col)
   end
-  server.Network.send(thing)
+  server.Network.cache(thing)
 end
 
 function server.rectfill(x0,y0,x1,y1,col)
@@ -146,7 +146,7 @@ function server.rectfill(x0,y0,x1,y1,col)
     col = math.floor(col)
     thing = safe_format("rectfill",x0,y0,x1,y1,col)
   end
-  server.Network.send(thing)
+  server.Network.cache(thing)
 end
 
 function server.circ(ox,oy,r,col)
@@ -161,7 +161,7 @@ function server.circ(ox,oy,r,col)
     col = math.floor(col)
     thing = safe_format("circ",ox,oy,r,col)
   end
-  server.Network.send(thing)
+  server.Network.cache(thing)
 end
 
 function server.circfill(cx,cy,r,col)
@@ -176,7 +176,7 @@ function server.circfill(cx,cy,r,col)
     col = math.floor(col)
     thing = safe_format("circfill",cx,cy,r,col)
   end
-  server.Network.send(thing)
+  server.Network.cache(thing)
 end
 
 function server.line(x0,y0,x1,y1,col)
@@ -186,7 +186,7 @@ function server.line(x0,y0,x1,y1,col)
   else
     thing = safe_format("line",x0,y0,x1,y1,col)
   end
-  server.Network.send(thing)
+  server.Network.cache(thing)
 end
 
 function server.time()
@@ -204,7 +204,7 @@ function server.pal(c0,c1,p)
     thing = safe_format("pal",c0,c1,p)
   end
 
-  server.Network.send(thing)
+  server.Network.cache(thing)
 
 end
 
@@ -222,7 +222,7 @@ function server.palt(c,t)
    end
   end
 
-  server.Network.send(thing)
+  server.Network.cache(thing)
 
 end
 
@@ -241,7 +241,7 @@ end
 
 function server.reboot()
 	local thing = safe_format("reboot")
-	server.Network.send(thing)
+	server.Network.cache(thing)
 end
 
 function server.clip(x,y,w,h)
@@ -252,19 +252,19 @@ function server.clip(x,y,w,h)
 		thing = safe_format("clip")
 	end
 
-	server.Network.send(thing)
+	server.Network.cache(thing)
 
 end
 
 function server.restore_camera(x,y)
 	local thing = safe_format("restore_camera",x,y)
-	server.Network.send(thing)
+	server.Network.cache(thing)
 end
 
 
 function server.printh(text)
 	local thing = safe_format("printh",text)
-	server.Network.send(thing)
+	server.Network.cache(thing)
 end
 
 function server.music(n,fade_len,channel_mask)
