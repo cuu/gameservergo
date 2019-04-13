@@ -74,7 +74,7 @@ function UDP.send() -- must inside lua's coroutine
     content = table.concat(piece,"|")
    
     ret,msg = udp:send(content.."\n")
-
+    --sched:suspend(udp)
   end
   
   UDP.data = {}
@@ -89,12 +89,12 @@ function UDP.cache(data)
   --UDP.data = UDP.data..data.."\n"
   UDP.data[#UDP.data+1] = data
   
-  --[[
+  
   if now - UDP.curr_time >= 40 then
     UDP.send()
     UDP.curr_time = now
   end
-  ]]
+
 end
 
 UDP.connect()
@@ -324,7 +324,7 @@ function draw(cart)
 		end
 
 		api.flip()
-    api.flip_network()
+    --api.flip_network()
     
 		prev_time = curr_time
 
