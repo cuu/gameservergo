@@ -202,8 +202,8 @@ func (self *GoGameThread) Run() int {
 }
 
 type CmdArg struct {
-  Type string `json:"Type"`
-  Value interface{} `json:"Value"`
+  Type string `json:"Typ"`
+  Value interface{} `json:"Val"`
 }
 
 func (self *CmdArg) GetInt() int {
@@ -243,9 +243,9 @@ func (self *CmdArg) GetBool() bool {
 }
 
 type ACmd struct {
-  Role string `json:"Role"` 
-  Func string  `json:"Func"`
-  Args []CmdArg `json:"Args"`
+  Role string `json:"Ro"` 
+  Func string  `json:"Fc"`
+  Args []CmdArg `json:"Ags"`
 }
 
 func (self *GoGameThread) ProcessCmd(cmd string) string {

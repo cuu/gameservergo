@@ -65,7 +65,7 @@ func (c *Client) listen_udp( id int) {
 	if id < MAX_CLIENTS {
     TheUDPClients[id] = c
 	}
-  message := make([]byte, 1024)
+  message := make([]byte, 4096)
   
   for {
       n, addr, err := c.udp_conn.ReadFromUDP(message)

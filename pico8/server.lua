@@ -2,29 +2,28 @@ json = require("json")
 
 local server = {Network=nil,NetworkTCP=nil}
 
-
 function safe_format(funcname,...)
-  local ret = {Func=funcname}
+  local ret = {Fc=funcname}
   local args = {}
  
   for i, v in ipairs{...} do
-    local arg = {Type="",Value=""}
+    local arg = {Typ="",Val=""}
     if type(v) == "string" then
-      arg.Type="S"
+      arg.Typ="S"
     end 
     if type(v) == "number" then
-      arg.Type="I"
+      arg.Typ="I"
     end
     if type(v) == "boolean" then
-      arg.Type="B"
+      arg.Typ="B"
     end
-    arg.Value=v
+    arg.Val=v
 
     table.insert(args,arg)
   end 
   
   if #args > 0 then
-    ret.Args = args
+    ret.Ags = args
   end 
 
   return json.encode(ret)
