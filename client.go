@@ -41,7 +41,7 @@ func start_tcp_client(gs *GameClient) {
     message, err := reader.ReadString('\n')
     //fmt.Println( len(message))
     if len(message) > 0 {
-      ret = gs.GameThread.ProcessCmd(message)
+      ret = gs.GameThread.ProcessCmd([]byte(message))
       conn.Write([]byte(ret+"\n"))
     }
 
@@ -91,11 +91,12 @@ func start_udp_client(gs *GameClient) {
     conn.Write([]byte("ping"))
     gs.GameThread.UdpConn = conn
     reader := bufio.NewReader(conn)
+
     for {
       message,_ := reader.ReadString('\n')
-      //fmt.Println("$$$$",message,"$$$$")
+      
       if len(message) > 0 {
-	gs.GameThread.ProcessCmd(message)
+	gs.GameThread.ProcessCmds(message)
 
       }     
     }

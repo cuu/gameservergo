@@ -46,21 +46,35 @@ end
 
 function UDP.send() -- must inside lua's coroutine
   local ret,msg
+  local content = ''
   -- print("safe_tcp_send data is " ,data ,#data)
   if #UDP.data == 0 then 
     print("data is zero",UDP.data)
     return nil
   end
 
+  local piece = {}
+  local divid = 3
+  if #UDP.data % 3 == 0 then 
+    divid = 3
+  end
   
-  for i ,v in ipairs(UDP.data) do 
+  if #UDP.data % 4 == 0 then 
+    divid = 4
+  end  
   
-    ret,msg = udp:send(v.."\n")
-    if(ret == nil) then
-      print("exiting...",msg)
-      os.exit()
+  for i=1,#UDP.data,divid do 
+    
+    for j=1,divid do
+      if UDP.data[i+j-1] ~= nil then 
+        piece[j] = UDP.data[i+j-1]
+      end
     end
     
+    content = table.concat(piece,"|")
+   
+    ret,msg = udp:send(content.."\n")
+
   end
   
   UDP.data = {}
@@ -263,14 +277,14 @@ end
 
 function GetBtnLoop()
   local count = 0 
-  local framerate = 1/100
+  local framerate = 1/120
   udp:send("ping")
   while true do
     udp:settimeout( framerate )
     local s, status = udp:receive()
     if s ~= nil then
-      count = count + string.len(s)
-      print("received: ",s)
+      --count = count + string.len(s)
+      --print("received: ",s)
       set_keymap(s,__keymap)
     end
 				

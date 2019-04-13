@@ -248,14 +248,14 @@ type ACmd struct {
   Args []CmdArg `json:"Ags"`
 }
 
-func (self *GoGameThread) ProcessCmd(cmd string) string {
+func (self *GoGameThread) ProcessCmd(cmd []byte) string {
   
   if len(cmd) == 0 {
     return "Error"
   }
   acmd := &ACmd{}
 
-  if err := json.Unmarshal([]byte(cmd), &acmd); err != nil {
+  if err := json.Unmarshal(cmd, &acmd); err != nil {
     fmt.Println(fmt.Sprintf("%v,%s,%d",err,cmd,len(cmd)))
     return "Error"
   }
@@ -322,9 +322,15 @@ func (self *GoGameThread) ProcessCmds(cmds string) string {
     return "Error"
   }
   
-  cmd_array := strings.Split(cmds,"\n")
+  cmd_array := strings.Split(cmds,"|")
+  /*
   for _,v := range cmd_array {
-    self.ProcessCmd(v)
+    println(string(v))
+  }
+  println()
+  */
+  for _,v := range cmd_array {
+    self.ProcessCmd([]byte(v))
   }
   
   return "O"
