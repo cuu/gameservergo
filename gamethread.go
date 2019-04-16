@@ -209,6 +209,8 @@ type CmdArg struct {
 func (self *CmdArg) GetInt() int {
   
   switch v := self.Value.(type) {
+  case int64:
+    return int(self.Value.(int64))
   case int:
     return self.Value.(int)
   case float64:
@@ -359,7 +361,7 @@ func lisp_parser(lisp_str string) (*LispCmd,error) {
   var lisp_cmd *LispCmd
 
   for i:=0;i<len(lisp_str);i++ {
-    if lisp_str[i] != byte(' ') && lisp_str[i] != byte('('){
+    if lisp_str[i] != byte(' ') && lisp_str[i] != byte('(') {
       if depth == 0 {
         e := &SyntaxError{}
         //fmt.Println("syntax error ,unexcepted closure")
@@ -460,8 +462,93 @@ func lisp_parser(lisp_str string) (*LispCmd,error) {
 
 func (self *GoGameThread) ProcessLispCmd(cmd string) string {
   
+  if len(cmd) == 0 {
+    return "Error"
+  }
+  
+  cmd = strings.Trim(cmd, "\n")
+
+  acmd,err := lisp_parser(cmd)
+
+  if err != nil {
+    fmt.Println(err,cmd,len(cmd),[]byte(cmd))
+    return "Error"
+  }
+
+  
+  if acmd.Func == "res" {
+    self.ThePico8.Res(acmd.Args)
+  }
+
+  if acmd.Func == "flip" {
+    self.ThePico8.Flip()
+  }
+
+  if acmd.Func == "print" {
+    self.ThePico8.Print(acmd.Args)
+  }
+  
+  if acmd.Func == "pico8" {
+    self.ThePico8.SetVersion(acmd.Args)
+  }
+  if acmd.Func == "map" {
+    self.ThePico8.Map(acmd.Args)
+  }
+
+  if acmd.Func == "spr" {
+    self.ThePico8.Spr(acmd.Args)
+  }
+  if acmd.Func == "mget" {
+    return self.ThePico8.MGet(acmd.Args)
+  }
+
+  if acmd.Func == "rect" {
+    self.ThePico8.Rectfill(acmd.Args)
+  }
+
+  if acmd.Func == "rectfill" {
+    self.ThePico8.Rectfill(acmd.Args)
+  }
+
+  if acmd.Func == "btn" {
+    return self.Btn(acmd.Args)
+  }
+
+  if acmd.Func == "pal" {
+    self.ThePico8.Pal(acmd.Args)
+  }
+  
+  if acmd.Func == "palt" {
+    self.ThePico8.Palt(acmd.Args...)
+  }
+  
+  if acmd.Func == "circ" {
+    self.ThePico8.Circ(acmd.Args...)
+  }
+  if acmd.Func == "circfill" {
+    self.ThePico8.Circfill(acmd.Args...)
+  }
+
+  return "O"
+
 }
 
 func (self *GoGameThread) ProcessLispCmds(cmds string) string {
-
+  
+  if len(cmds) == 0 {
+    return "Error"
+  }
+  
+  cmd_array := strings.Split(cmds,"|")
+  /*
+  for _,v := range cmd_array {
+    println(string(v))
+  }
+  println()
+  */
+  for _,v := range cmd_array {
+    self.ProcessLispCmd(v)
+  }
+  
+  return "O"
 }

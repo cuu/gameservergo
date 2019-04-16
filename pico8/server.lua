@@ -298,12 +298,12 @@ function server.sfx(n,channel,mask)
 end
 
 function server.send_pico8_version(version)
-  local thing = safe_format("pico8", version)
+  local thing = safe_format_json("pico8", version)
   server.NetworkTCP.send(thing)
 end
 
 function server.send_resource_done()
-  local thing = safe_format("resdone")
+  local thing = safe_format_json("resdone")
   server.NetworkTCP.send(thing)
 
 end
@@ -313,7 +313,7 @@ function server.send_resource(res_type,res_data)
     return 
   end
   
-  local thing = safe_format("res", res_type,res_data)
+  local thing = safe_format_json("res", res_type,res_data)
   server.NetworkTCP.send(thing)
 
 end
