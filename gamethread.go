@@ -336,3 +336,132 @@ func (self *GoGameThread) ProcessCmds(cmds string) string {
   return "O"
 }
 
+type SyntaxError struct {
+    msg    string // description of error
+    Offset int  // error occurred after reading Offset bytes
+}
+
+func (e *SyntaxError) Error() string { return e.msg }
+
+
+type LispCmd struct {
+  Func string
+  Args []CmdArg
+
+}
+
+//only parse one line lisp function with arguments
+func lisp_parser(lisp_str string) (*LispCmd,error) {
+  depth :=0
+  instring := 0
+  lastpos :=0
+  var segs []string
+  var lisp_cmd *LispCmd
+
+  for i:=0;i<len(lisp_str);i++ {
+    if lisp_str[i] != byte(' ') && lisp_str[i] != byte('('){
+      if depth == 0 {
+        e := &SyntaxError{}
+        //fmt.Println("syntax error ,unexcepted closure")
+        e.msg = fmt.Sprintf("syntax error %d",i)
+        e.Offset = i
+        return nil,e
+      }
+    }
+    
+    if lisp_str[i] == byte('(') {
+
+      depth +=1
+      lastpos = i
+    }
+    if lisp_str[i] == byte(')') {
+      if lastpos < i {
+        segs = append(segs, lisp_str[lastpos+1:i])
+      }
+      depth -=1
+    }
+
+    if depth > 0 {
+      if lisp_str[i] == byte(' ') {
+        if instring == 0 {
+          segs = append(segs, lisp_str[lastpos+1:i])
+          lastpos = i
+        }
+      }
+    }
+
+    if lisp_str[i] == byte('"') {
+      if instring == 0 {
+        instring+=1
+      }else if instring > 0 {
+        instring-=1
+      }
+    }
+
+  }
+
+  if depth > 0 {
+    e := &SyntaxError{}
+    //fmt.Println("syntax error ,unexcepted closure")
+    e.msg = "syntax error ,unexcepted closure"
+    e.Offset = depth
+    return nil,e
+  }
+  if instring >  0 {
+    e := &SyntaxError{}
+    //fmt.Println("syntax error,string quato errors")
+    e.msg = "syntax error,string quato errors"
+    e.Offset = instring
+    return nil,e
+  }
+  
+  if len(segs) < 1 {
+    e := &SyntaxError{}
+    //fmt.Println("syntax error,string quato errors")
+    e.msg = "unknown error"
+    e.Offset = len(segs)    
+    return nil,e
+  }
+
+  lisp_cmd = &LispCmd{}
+  lisp_cmd.Func = segs[0]
+
+  for i:=1;i<len(segs);i++ {
+    acmd := CmdArg{}
+
+    if segs[i][0] == byte('"') {
+      acmd.Type = "S"
+      acmd.Value = segs[i][1:len(segs[i])-1]
+
+    } else if segs[i] == "true" || segs[i] == "false" {
+      acmd.Type = "B"
+      if segs[i] == "true" {
+        acmd.Value=true
+      }else if segs[i] == "false" {
+        acmd.Value = false
+      }
+    } else if strings.Contains(segs[i],".") {
+      acmd.Type = "F"
+      i, _ := strconv.ParseFloat(segs[i], 64)
+      acmd.Value = i
+    }else {
+      acmd.Type = "I"
+      i,_ := strconv.ParseInt(segs[i],0,64)
+      acmd.Value = i 
+    }
+    
+    lisp_cmd.Args = append(lisp_cmd.Args,acmd)
+
+  }
+  
+  return lisp_cmd,nil
+  
+}
+
+func (self *GoGameThread) ProcessLispCmd(cmd string) string {
+  
+}
+
+func (self *GoGameThread) ProcessLispCmds(cmds string) string {
+
+}
