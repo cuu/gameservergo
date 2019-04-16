@@ -79,23 +79,34 @@ function UDP.send() -- must inside lua's coroutine
   
   UDP.data = {}
     
-  sched:suspend(udp)
+  --sched:suspend(udp)
   
 	return nil
 end
 
 function UDP.cache(data)
-  local now = time_ms()
   --UDP.data = UDP.data..data.."\n"
   UDP.data[#UDP.data+1] = data
   
-  
-  if now - UDP.curr_time >= 40 then
-    UDP.send()
-    UDP.curr_time = now
+end
+
+function UDP_SendLoop()
+
+
+  local now
+
+  while true do
+	  now = time_ms()
+	  if now - UDP.curr_time >= 40 then
+	    UDP.send()
+	    UDP.curr_time = now
+	  end
+
+	  sched:suspend(udp)
   end
 
 end
+
 
 UDP.connect()
 
@@ -277,7 +288,7 @@ end
 
 function GetBtnLoop()
   local count = 0 
-  local framerate = 1/120
+  local framerate = 1/4800
   udp:send("ping")
   while true do
     udp:settimeout( framerate )
@@ -325,9 +336,8 @@ function draw(cart)
 
 		api.flip()
     --api.flip_network()
-    
 		prev_time = curr_time
-
+		sched:suspend(udp)	
 	end
 
 end
@@ -387,7 +397,6 @@ function RunLoop(file)
 		if cart._init then cart._init() end
     
 		 draw(cart)
-     
   end
 end
 
@@ -396,10 +405,11 @@ end
 --------------------------------------------
 function main(file)
 
-	sched:spawn(RunLoop,file)
+  sched:spawn(RunLoop,file)
   
   sched:spawn(GetBtnLoop)
-  
+  sched:spawn(UDP_SendLoop)
+
   while true do
     local worked, t = sched:select()
     if worked then

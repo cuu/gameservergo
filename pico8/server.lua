@@ -2,7 +2,7 @@ json = require("json")
 
 local server = {Network=nil,NetworkTCP=nil}
 
-function safe_format(funcname,...)
+function safe_format_json(funcname,...)
   local ret = {Fc=funcname}
   local args = {}
  
@@ -29,7 +29,32 @@ function safe_format(funcname,...)
   return json.encode(ret)
 end
 
+-- lisp style 
+function safe_format(funcname,...) 
+  local args = {}
+  local arg
 
+  table.insert(args,funcname)
+  for i,v in ipairs{...} do
+    if type(v) == "string" then
+      arg = "\""..v.."\""
+    end
+    if type(v) == "number" then
+      arg = tostring(v)
+    end
+    if type(v) == "boolean" then
+      arg = tostring(v)
+    end
+    table.insert(args,arg)
+  end
+
+  if #args > 0 then
+    return "("..table.concat(args," ")..")"
+  end
+
+  return ""
+
+end
 
 function server.down()
 
