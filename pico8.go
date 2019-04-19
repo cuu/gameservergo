@@ -183,6 +183,7 @@ func (self *Pico8) Flip() {
 			
 		_r := rect.NewRect(_blit_x,_blit_y)
 		surface.Blit(self.HWND,bigger,_r,nil)
+    bigger.Free()
 			
 	} else {
  		
@@ -284,6 +285,7 @@ func (self *Pico8) Print(args []CmdArg){
 	
 	_r := rect.NewRect(x,y,0,0)
 	surface.Blit(self.DrawCanvas,imgText,_r,nil)
+  imgText.Free()
 }
 
 func (self *Pico8) SetVersion(args []CmdArg) {
