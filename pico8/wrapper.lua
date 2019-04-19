@@ -33,13 +33,15 @@ end
 local server = require("server")
 local api = require("libpico8")
 
+local remote_host = "127.0.0.1"
+
 api.server = server 
 
 local UDP = { data = {} ,curr_time = 0}
 local udp = assert(socket.udp())
 
 function UDP.connect()
-	assert(udp:setpeername("127.0.0.1",8080))
+	assert(udp:setpeername(remote_host,8080))
 	udp:settimeout()
 	udp:send("ping")
 end
@@ -47,6 +49,7 @@ end
 function UDP.send() -- must inside lua's coroutine
   local ret,msg
   local content = ''
+  
   -- print("safe_tcp_send data is " ,data ,#data)
   if #UDP.data == 0 then 
     print("data is zero",UDP.data)
@@ -72,16 +75,14 @@ function UDP.send() -- must inside lua's coroutine
     end
     
     content = table.concat(piece,"|")
-   
     ret,msg = udp:send(content.."\n")
-    --sched:suspend(udp)
+
   end
   
+ 
   UDP.data = {}
-    
-  --sched:suspend(udp)
   
-	return nil
+  return nil
 end
 
 function UDP.cache(data)
@@ -97,7 +98,7 @@ function UDP_SendLoop()
 
   while true do
 	  now = time_ms()
-	  if now - UDP.curr_time >= 40 then
+	  if now - UDP.curr_time >= 33 then
 	    UDP.send()
 	    UDP.curr_time = now
 	  end
@@ -117,7 +118,7 @@ local TCP= {}
 local tcp = assert(socket.tcp())
 
 function TCP.connect()
-  local host, port = "127.0.0.1", 8080
+  local host, port = remote_host, 8080
   tcp:connect(host, port);
   tcp:settimeout(5)
 end
@@ -288,7 +289,7 @@ end
 
 function GetBtnLoop()
   local count = 0 
-  local framerate = 1/4800
+  local framerate = 1/api.pico8.fps
   udp:send("ping")
   while true do
     udp:settimeout( framerate )
@@ -317,28 +318,28 @@ function draw(cart)
   local curr_time = 0
   local skip = 0  
   
-	curr_time = time_ms()
-	prev_time = time_ms()
-	local frame_time_ms = frame_time*1000
+  curr_time = time_ms()
+  prev_time = time_ms()
+  local frame_time_ms = frame_time*1000
   
-	while true do
+  while true do
 
-		if cart._update then cart._update() end
-		if cart._update60 then cart._update60() end
+    if cart._update then cart._update() end
+    if cart._update60 then cart._update60() end
 
-		if cart._draw   then cart._draw() end
-		
-		curr_time = time_ms()
-		
-		if curr_time - prev_time < frame_time_ms then
-			sleep(frame_time)
-		end
+    if cart._draw   then cart._draw() end
 
-		api.flip()
-    --api.flip_network()
-		prev_time = curr_time
-		sched:suspend(udp)	
-	end
+      curr_time = time_ms()
+
+      if curr_time - prev_time < frame_time_ms then
+	sleep(frame_time)
+      end
+
+      api.flip()
+      api.flip_network()
+      prev_time = curr_time
+      sched:suspend(udp)
+    end
 
 end
 
@@ -408,12 +409,13 @@ function main(file)
   sched:spawn(RunLoop,file)
   
   sched:spawn(GetBtnLoop)
-  sched:spawn(UDP_SendLoop)
+  --sched:spawn(UDP_SendLoop)
 
   while true do
     local worked, t = sched:select()
     if worked then
         if t and t ~= 0 then
+	    print(t)
             if socket then socket.sleep(t) end
         end
     else

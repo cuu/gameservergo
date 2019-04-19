@@ -500,7 +500,9 @@ func (self *Pico8) Spr(args []CmdArg) {
   
   _r := rect.NewRect(x,y,0,0)
   surface.Blit(self.DrawCanvas,gfx_piece_new,_r,nil)
-  
+  gfx_piece.Free()
+  gfx_piece_new.Free()
+
 }
 
 func (self *Pico8) draw_map(n,x,y int) {
@@ -525,7 +527,7 @@ func (self *Pico8) draw_map(n,x,y int) {
 
   _r := rect.NewRect(x,y,0,0)
   surface.Blit(self.DrawCanvas,gfx_piece,_r,nil)
-
+  gfx_piece.Free()
 }
 
 
