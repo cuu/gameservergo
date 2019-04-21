@@ -749,6 +749,9 @@ func (self *Pico8) Palt(args ...CmdArg) {
   }
 
   if len(args) == 2 {
+    c = args[0].GetInt()
+    t = args[1].GetInt()
+    
     c = c % 16 
     if t == 1 {
       self.PalTransparent[c] = 0
