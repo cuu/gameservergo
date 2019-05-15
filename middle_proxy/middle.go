@@ -2,293 +2,116 @@ package main
 
 import (
     "fmt"
-    "net"
+    //"net"
     "os"
-    "log"
-		"io"
-		"bufio"
-		"os/signal"
+//    "log"
+//    "io"
+//    "bufio"
+    "os/signal"
 )
 
-const (
-    CONN_HOST_A = "0.0.0.0"
-    CONN_PORT_A = "8080"
-    CONN_TYPE_TCP = "tcp"
-		CONN_TYPE_UDP ="udp"
 
-		CONN_HOST_B="0.0.0.0"
-		CONN_PORT_B = "8081"
-		
-		MAX_CLIENTS = 2
-)
-
-type Client struct {
-	conn   net.Conn
-  udp_conn *net.UDPConn
-  udp_client_addr *net.UDPAddr
-  Bind   int
+type MiddleInterface interface {
+	Ex(id int, message []byte)
 }
 
-func (c *Client) listen_tcp( id int) {  
-  
-	message := make([]byte, 1024)
-	reader := bufio.NewReader(c.conn)
-	
-	for {
-		read_number, err := reader.Read(message)
-		if err != nil {
-			if err != io.EOF {
-				fmt.Println("Un EOF error: ",err)
-			}
-			c.conn.Close()
-      
-      for i:=0;i<MAX_CLIENTS;i++ {
-        if TheTCPClients[c.Bind][i] != nil {
-          TheTCPClients[c.Bind][i].conn.Close()
-          TheTCPClients[c.Bind][i] = nil
-        }
-      }
+type TCPMiddle struct {
 
-			break
-		}else {
-      ExchangeTCP(id,c.Bind,message[:read_number])
-    
-      for i:=0;i<1024;i++ {
-        message[i]=0
-      }
-    }
-	}
-  
+	GUI_Clients []*Client
+	LUA_Clients []*Client
+
 }
 
-func (c *Client) listen_udp( id int) {
-	if id < MAX_CLIENTS {
-    TheUDPClients[id] = c
-	}
-  message := make([]byte, 4096)
-  
-  for {
-      n, addr, err := c.udp_conn.ReadFromUDP(message)
-
-      //fmt.Println("UDP client : ", addr,",Read ", n)
-
-      if err != nil {
-        
-        log.Fatal(err)
-      }
-      c.udp_client_addr = addr
-      ExchangeUDP(id,message[:n])
-  }
-}
-
-// Send text message to client
-func (c *Client) Send(message string) error {
-	_, err := c.conn.Write([]byte(message))
-	return err
-}
-
-// Send bytes to client
-func (c *Client) SendBytes(b []byte) error {
-	_, err := c.conn.Write(b)
-	return err
-}
-
-func (c *Client) SendUDPBytes(b []byte) error {
-  _, err := c.udp_conn.WriteToUDP(b, c.udp_client_addr)
-  if err != nil {
-    fmt.Println(err)
-  }
-	return err
-}
-
-
-func (c *Client) Conn() net.Conn {
-	return c.conn
-}
-
-func (c *Client) Close() error {
-	return c.conn.Close()
-}
-
-var TheTCPClients [][MAX_CLIENTS]*Client
-var TheUDPClients [MAX_CLIENTS]*Client
-
-func serverTCP_A() {
-    l, err := net.Listen(CONN_TYPE_TCP, CONN_HOST_A+":"+CONN_PORT_A)
-    if err != nil {
-        fmt.Println("Error listening:", err.Error())
-        os.Exit(1)
-    }
-    defer l.Close()
-    fmt.Println("Listening tcp on A " + CONN_HOST_A + ":" + CONN_PORT_A)
-    for {
-				conn, _ := l.Accept()
-				client := &Client{
-					conn:   conn,
-				}
-        
-        has_seat := -1
-        
-        for i:=0;i<len(TheTCPClients);i++ {
-          if TheTCPClients[i][0] == nil {
-            has_seat = i
-            break
-          }
-        }
-        
-        if has_seat == -1 {
-          var clients [MAX_CLIENTS]*Client
-          clients[0] = client
-          clients[1] = nil
-          TheTCPClients = append(TheTCPClients,clients)
-          has_seat = len(TheTCPClients)-1
-        }else{
-          
-            if TheTCPClients[has_seat][0] == nil {
-              TheTCPClients[has_seat][0] = client // take seat
-
-            }
-        }
-        
-        client.Bind = has_seat
-				go client.listen_tcp(0)
-				
-    }
-}
-
-func serverTCP_B() {
-    l, err := net.Listen(CONN_TYPE_TCP, CONN_HOST_B+":"+CONN_PORT_B)
-    if err != nil {
-        fmt.Println("Error listening:", err.Error())
-        os.Exit(1)
-    }
-    defer l.Close()
-    fmt.Println("Listening tcp on B " + CONN_HOST_B + ":" + CONN_PORT_B)
-    for {
-				conn, _ := l.Accept()
-				client := &Client{
-					conn:   conn,
-				}
-
-        has_seat := -1
-        
-        for i:=0;i<len(TheTCPClients);i++ {
-          if TheTCPClients[i][1] == nil {
-            has_seat = i
-            break
-          }
-        }
-        
-        if has_seat == -1 {
-          var clients [MAX_CLIENTS]*Client
-          clients[0] = nil
-          clients[1] = client
-          TheTCPClients = append(TheTCPClients,clients)
-          has_seat = len(TheTCPClients)-1
-        }else{
-          if TheTCPClients[has_seat][1] == nil {
-              TheTCPClients[has_seat][1] = client // take seat
-          }
-        }
-        client.Bind = has_seat
-				go client.listen_tcp(1)
-    }
-}
-
-func ExchangeTCP(id int,seat_number int,message []byte) {
- 
-    if id == 1 {
-      if TheTCPClients[seat_number][0] != nil {
-        TheTCPClients[seat_number][0].SendBytes(message)
-      } 
-    }else if id == 0{
-      if TheTCPClients[seat_number][1] != nil {
-        TheTCPClients[seat_number][1].SendBytes(message)
-      }
-    }
-  
-}
-
-
-func serverUDP_A() {
-
-    ServerAddr,err := net.ResolveUDPAddr("udp",":"+CONN_PORT_A)
-    if err != nil {
-      panic(err)
-    }
-    
-    l, err := net.ListenUDP(CONN_TYPE_UDP,ServerAddr)
-    if err != nil {
-        fmt.Println("Error listening:", err.Error())
-        os.Exit(1)
-    }
-    defer l.Close()
-    fmt.Println("Listening udp on A " + CONN_HOST_A + ":" + CONN_PORT_A)
-    for {
-				
-				client := &Client{
-					udp_conn: l,
-				}
-        
-				client.listen_udp(0)
-				
-    }
-}
-
-func serverUDP_B() {
-    ServerAddr,err := net.ResolveUDPAddr("udp",CONN_HOST_B+":"+CONN_PORT_B)
-    if err != nil {
-      panic(err)
-    }
-
-    l, err := net.ListenUDP(CONN_TYPE_UDP, ServerAddr)
-    if err != nil {
-        fmt.Println("Error listening:", err.Error())
-        os.Exit(1)
-    }
-    defer l.Close()
-    fmt.Println("Listening udp on B " + CONN_HOST_B + ":" + CONN_PORT_B)
-    for {
-				
-				client := &Client{
-					udp_conn: l,
-				}
-
-				client.listen_udp(1)
-    }
-}
-
-func ExchangeUDP(id int, message []byte) {
-	if id == 1 {
-		if TheUDPClients[0] != nil {
-      
-			TheUDPClients[0].SendUDPBytes(message)
-		}
-	}else if id == 0{
-		
-		if TheUDPClients[1] != nil {
-			TheUDPClients[1].SendUDPBytes(message)
+func (self*TCPMiddle) ClearZombie() {
+	for i:=0;i<len(self.LUA_Clients);i++ {
+		if self.LUA_Clients[i].HasError != nil {
+			self.LUA_Clients[i] = nil
 		}
 	}
+	for i:=0;i<len(self.GUI_Clients);i++ {
+		if self.GUI_Clients[i].HasError != nil {
+			self.GUI_Clients[i] = nil
+		}
+	}
+}
 
+func (self *TCPMiddle) Ex(id int, message []byte) {
+
+    if id == GUI {
+      for i:=0;i<len(self.LUA_Clients);i++ {
+        if self.LUA_Clients[i] != nil {
+          err := self.LUA_Clients[i].SendBytes(message)
+          if err != nil {
+            self.LUA_Clients[i].HasError = err
+          }
+        }
+      }
+    }else if id == LUA {
+      for i:=0;i<len(self.GUI_Clients);i++ {
+        if self.GUI_Clients[i] != nil {
+          err := self.GUI_Clients[i].SendBytes(message)
+          if err != nil {
+            self.GUI_Clients[i].HasError = err
+          }
+        }
+      }
+    }
+
+    self.ClearZombie()
+}
+
+
+
+type UDPMiddle struct {
+
+	GUI_Client *Client
+	LUA_Client *Client
+
+}
+
+func (self*UDPMiddle) ClearZombie() {
+  
+}
+
+func (self *UDPMiddle) Ex(id int, message []byte) {
+
+	if id == GUI {
+      if self.LUA_Client != nil {
+        self.LUA_Client.SendUDPBytes(message)
+      }
+
+	}else if id == LUA {
+      if self.GUI_Client != nil {
+        self.GUI_Client.SendUDPBytes(message)
+      }
+	}
+
+	self.ClearZombie()
 }
 
 
 func main(){
 
-	go serverTCP_A()
-	go serverTCP_B()
 
-	go serverUDP_A()
-	go serverUDP_B()
+	tcp_middle := &TCPMiddle{}
+
+	udp_middle := &UDPMiddle{}
+
+	go tcp_middle.serverTCP_GUI()
+	go tcp_middle.serverTCP_LUA()
+
+	go udp_middle.serverUDP_GUI()
+	go udp_middle.serverUDP_LUA()
   
+
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	
-  select {
-		case <-signalChan:
-			fmt.Println("ctrl +c ,exiting..")
-			os.Exit(-1)
-  }	
+
+	select {
+	case <-signalChan:
+		fmt.Println("ctrl +c ,exiting..")
+		os.Exit(-1)
+	}
 
 }

@@ -85,26 +85,6 @@ function api.btn_remote(i,p)
 	
 end
 
-function api.btnp(i,p)
-	local thing
-	local ret
-
-	if type(i) == 'number' then
-		p = p or 0
-		if __keymap[p] and __keymap[p][i] then
-				ret = api.server.btnp( __keymap[p][i],p)
-				if ret == "TRUE" then
-					return true
-				else 
-					return false
-				end
-		end
-	end
-	
-	return false
-	
-end
-
 function api.mget(x,y) 
 
   if x == nil or y == nil then return 0 end
@@ -513,7 +493,7 @@ function api.load_p8_text(filename)
   api.server.send_pico8_version(version)
 
   api.server.send_resource("gfx",gfxdata)
-  api.server.send_resource("gff",gffdata:sub(1,#gffdata-1))
+  api.server.send_resource("gff",gffdata)
   api.server.send_resource("sfx",sfxdata)
   api.server.send_resource("map",mapdata)
   api.server.send_resource("music",musicdata)
@@ -725,8 +705,7 @@ function api.line(x0,y0,x1,y1,col)
 end
 
 function api.time()
-  local ret = server.time()
-  return tonumber(ret)
+ 	return 30
 end
 
 function api.reboot()

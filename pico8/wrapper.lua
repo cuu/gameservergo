@@ -214,7 +214,7 @@ function new_sandbox()
     count=api.count,
     all=api.all,
     btn=api.btn,
-    btnp=api.btnp,
+    btnp=api.btn,
     sfx=api.sfx,
     music=api.music,
     
