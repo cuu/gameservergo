@@ -116,6 +116,7 @@ func (self*UDPMiddle) serverUDP_GUI() {
         client := &Client{
 			udp_conn: l,
 			Parent:self,
+			Bind:GUI,
         }
 
         self.GUI_Client = client
@@ -144,6 +145,7 @@ func (self*UDPMiddle) serverUDP_LUA() {
 		client := &Client{
 		    udp_conn: l,
 		    Parent:self,
+		    Bind:LUA,
 		}
         self.LUA_Client = client
 		client.ReadUDP(LUA) // no goroutine

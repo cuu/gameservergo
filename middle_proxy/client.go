@@ -12,6 +12,7 @@ import (
 )
 
 type UDP_Addr struct {
+	client_info  string
 	client_addr *net.UDPAddr
 	LastActive gotime.Time // this is for udp dead connection
 
@@ -61,21 +62,26 @@ func (c *Client) ReadUDP( id int) {
   
   for {
   	n, addr, err := c.udp_conn.ReadFromUDP(message)
-    //fmt.Println("UDP client : ", addr,",Read ", n)
+    //fmt.Println("UDP client" ,id , " : ", addr,",Read ", n)
+
     if err != nil {
     	log.Fatal(err)
     }
   	hasit := false
     for i:=0;i<len(c.udp_client_addr);i++ {
-    	if c.udp_client_addr[i].client_addr == addr {
-    		hasit = true
-    		c.udp_client_addr[i].LastActive = gotime.Now()
-    		break
+    	if c.udp_client_addr[i] != nil {
+			if c.udp_client_addr[i].client_info == addr.String() {
+				hasit = true
+				c.udp_client_addr[i].client_addr = addr
+				c.udp_client_addr[i].LastActive = gotime.Now()
+				break
+			}
 		}
     }
 
     if hasit == false {
     	a_new_udp_client := &UDP_Addr{}
+    	a_new_udp_client.client_info = addr.String()
     	a_new_udp_client.client_addr= addr
     	a_new_udp_client.LastActive = gotime.Now()
     	c.udp_client_addr = append(c.udp_client_addr,a_new_udp_client)
@@ -100,7 +106,7 @@ func (c *Client) SendBytes(b []byte) error {
 func (c *Client) SendUDPBytes(b []byte) error {
 
 	for i:=0;i< len(c.udp_client_addr); i++ {
-		if c.udp_client_addr[i].client_addr != nil {
+		if c.udp_client_addr[i] != nil {
 			_, err := c.udp_conn.WriteToUDP(b, c.udp_client_addr[i].client_addr)
 			if err != nil {
 				fmt.Println(err)

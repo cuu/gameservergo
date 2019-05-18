@@ -8,6 +8,7 @@ import (
 //    "io"
 //    "bufio"
     "os/signal"
+    gotime "time"
 )
 
 
@@ -24,13 +25,17 @@ type TCPMiddle struct {
 
 func (self*TCPMiddle) ClearZombie() {
 	for i:=0;i<len(self.LUA_Clients);i++ {
-		if self.LUA_Clients[i].HasError != nil {
-			self.LUA_Clients[i] = nil
+		if self.LUA_Clients[i] != nil {
+			if self.LUA_Clients[i].HasError != nil {
+				self.LUA_Clients[i] = nil
+			}
 		}
 	}
 	for i:=0;i<len(self.GUI_Clients);i++ {
-		if self.GUI_Clients[i].HasError != nil {
-			self.GUI_Clients[i] = nil
+		if self.GUI_Clients[i] != nil {
+			if self.GUI_Clients[i].HasError != nil {
+				self.GUI_Clients[i] = nil
+			}
 		}
 	}
 }
@@ -70,7 +75,33 @@ type UDPMiddle struct {
 }
 
 func (self*UDPMiddle) ClearZombie() {
-  
+
+	zm := 10
+
+	if self.LUA_Client != nil {
+		for i:=0;i< len(self.LUA_Client.udp_client_addr);i++ {
+			if self.LUA_Client.udp_client_addr[i] != nil {
+				t := gotime.Now()
+				elapsed := t.Sub(self.LUA_Client.udp_client_addr[i].LastActive)
+				if elapsed > gotime.Minute*gotime.Duration(zm) { // DeadLine 1 minute
+					self.LUA_Client.udp_client_addr[i] = nil
+				}
+			}
+		}
+	}
+
+	if self.GUI_Client != nil {
+		for i:=0;i< len(self.GUI_Client.udp_client_addr);i++ {
+			if self.GUI_Client.udp_client_addr[i] != nil {
+				t := gotime.Now()
+				elapsed := t.Sub(self.GUI_Client.udp_client_addr[i].LastActive)
+				if elapsed > gotime.Minute*gotime.Duration(zm) { // DeadLine 1 minute
+					self.GUI_Client.udp_client_addr[i] = nil
+				}
+			}
+		}
+	}
+
 }
 
 func (self *UDPMiddle) Ex(id int, message []byte) {
